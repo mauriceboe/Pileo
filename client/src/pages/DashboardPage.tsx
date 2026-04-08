@@ -7,15 +7,20 @@ import type { UserTask } from '../api/stats.api';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, isToday, isYesterday, isPast, format } from 'date-fns';
 import {
-  Bell, ListChecks, CheckCircle2, Inbox, Layers,
+  Bell, ListChecks, CheckCircle2, Inbox, Layers, Plus,
   AtSign, UserPlus, MessageSquare, Settings, User, ChevronRight, Calendar,
   LayoutDashboard, Star, Zap, Rocket, Target, Flag, Heart, Coffee, Sun,
   Moon, Cloud, Flame, Music, Camera, Gift, Award, Bookmark, Globe, Lightbulb,
   Code, Briefcase, Bug, Compass, Feather, Folder, Package, Puzzle,
   type LucideIcon,
 } from 'lucide-react';
+import * as projectsApi from '../api/projects.api';
+import * as boardsApi from '../api/boards.api';
 import { SettingsDialog } from '../components/ui/SettingsDialog';
 import { ProfileDialog } from '../components/ui/ProfileDialog';
+import { Dialog } from '../components/ui/Dialog';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
 import styles from './dashboard-page.module.css';
 
 const PROJECT_ICON_MAP: Record<string, LucideIcon> = {
@@ -30,6 +35,23 @@ const PROJECT_ICON_MAP: Record<string, LucideIcon> = {
 function getProjectIcon(iconName: string | null | undefined): LucideIcon {
   return (iconName && PROJECT_ICON_MAP[iconName]) || Layers;
 }
+
+const PROJECT_ICONS: Array<{ name: string; icon: LucideIcon }> = [
+  { name: 'layers', icon: Layers }, { name: 'folder', icon: Folder },
+  { name: 'briefcase', icon: Briefcase }, { name: 'rocket', icon: Rocket },
+  { name: 'star', icon: Star }, { name: 'zap', icon: Zap },
+  { name: 'target', icon: Target }, { name: 'flag', icon: Flag },
+  { name: 'heart', icon: Heart }, { name: 'globe', icon: Globe },
+  { name: 'lightbulb', icon: Lightbulb }, { name: 'code', icon: Code },
+  { name: 'bug', icon: Bug }, { name: 'compass', icon: Compass },
+  { name: 'package', icon: Package }, { name: 'puzzle', icon: Puzzle },
+  { name: 'feather', icon: Feather }, { name: 'flame', icon: Flame },
+  { name: 'award', icon: Award }, { name: 'bookmark', icon: Bookmark },
+  { name: 'coffee', icon: Coffee }, { name: 'sun', icon: Sun },
+  { name: 'moon', icon: Moon }, { name: 'cloud', icon: Cloud },
+  { name: 'music', icon: Music }, { name: 'camera', icon: Camera },
+  { name: 'gift', icon: Gift }, { name: 'bell', icon: Bell },
+];
 
 const QUOTES = [
   '"The secret of getting ahead is getting started." — Mark Twain',
@@ -65,6 +87,10 @@ export function DashboardPage() {
   const [stats, setStats] = useState({ totalTasks: 0, completed: 0, inProgress: 0, notifications: 0 });
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectIcon, setNewProjectIcon] = useState('layers');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const fetchStats = useCallback(async () => {
@@ -85,6 +111,25 @@ export function DashboardPage() {
     fetchStats();
     fetchUserTasks();
   }, [fetchProjects, fetchAllBoards, fetchNotifications, fetchStats, fetchUserTasks]);
+
+  const handleCreateProject = async () => {
+    const trimmed = newProjectName.trim();
+    if (!trimmed) return;
+    setIsCreatingProject(true);
+    try {
+      const project = await projectsApi.createProject({ name: trimmed, icon: newProjectIcon || null });
+      await fetchProjects();
+      await fetchAllBoards();
+      setNewProjectName('');
+      setNewProjectIcon('layers');
+      setShowCreateProject(false);
+      const boards = await boardsApi.listBoards(project.id);
+      const firstBoard = boards[0];
+      if (firstBoard) {
+        navigate(`/projects/${project.id}/boards/${firstBoard.id}`);
+      }
+    } catch {} finally { setIsCreatingProject(false); }
+  };
 
   const tiles: Array<{ id: WidgetView; icon: React.ReactNode; count: number; label: string; colorClass: string }> = [
     { id: 'notifications', icon: <Bell size={18} />, count: stats.notifications, label: 'Notifications', colorClass: styles.iconPurple! },
@@ -285,7 +330,12 @@ export function DashboardPage() {
         </section>
 
         <section className={styles.projectSection}>
-          <h2 className={styles.sectionTitle}>Projects</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Projects</h2>
+            <button className={styles.newProjectBtn} onClick={() => setShowCreateProject(true)}>
+              <Plus size={14} /> New Project
+            </button>
+          </div>
           {isLoading ? (
             <div className={styles.loading}>Loading...</div>
           ) : projects.length === 0 ? (
@@ -339,6 +389,39 @@ export function DashboardPage() {
 
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} />
+
+      <Dialog open={showCreateProject} onClose={() => { setShowCreateProject(false); setNewProjectName(''); setNewProjectIcon('layers'); }} title="New Project">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Input
+            label="Project Name"
+            placeholder="My Project"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateProject(); } }}
+            autoFocus
+          />
+          <div>
+            <span className={styles.iconPickerLabel}>Icon</span>
+            <div className={styles.iconGrid}>
+              {PROJECT_ICONS.map(({ name, icon: Icon }) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={`${styles.iconOption} ${newProjectIcon === name ? styles.iconSelected : ''}`}
+                  onClick={() => setNewProjectIcon(name)}
+                  title={name}
+                >
+                  <Icon size={16} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <Button variant="secondary" size="sm" onClick={() => { setShowCreateProject(false); setNewProjectName(''); setNewProjectIcon('layers'); }}>Cancel</Button>
+            <Button size="sm" onClick={handleCreateProject} loading={isCreatingProject} disabled={!newProjectName.trim()}>Create</Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

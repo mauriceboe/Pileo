@@ -5,7 +5,6 @@ import { useProjectStore } from '../../stores/project.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useBoardStore } from '../../stores/board.store';
 import * as boardsApi from '../../api/boards.api';
-import type { Board } from '@pileo/shared';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { SettingsDialog } from '../ui/SettingsDialog';

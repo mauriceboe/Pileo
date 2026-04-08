@@ -9,9 +9,9 @@ interface SessionData {
   userId?: string;
 }
 
-const getSessionStmt = sqlite.prepare(
-  'SELECT sess FROM session WHERE sid = ? AND expired_at > ?',
-);
+function getSessionRow(sid: string, now: number): { sess: string } | undefined {
+  return sqlite.prepare('SELECT sess FROM session WHERE sid = ? AND expired_at > ?').get(sid, now) as { sess: string } | undefined;
+}
 
 /**
  * Extract and validate session from the upgrade request cookie.
@@ -45,7 +45,7 @@ export function authenticateUpgrade(req: IncomingMessage): string | null {
   }
 
   try {
-    const row = getSessionStmt.get(sid, Date.now()) as { sess: string } | undefined;
+    const row = getSessionRow(sid, Date.now());
     if (!row) {
       logger.debug({ sid }, 'WebSocket upgrade: session not found or expired');
       return null;

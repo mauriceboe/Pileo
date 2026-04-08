@@ -175,7 +175,7 @@ export function initializeDatabase(): void {
     CREATE TABLE IF NOT EXISTS session (
       sid TEXT PRIMARY KEY,
       sess TEXT NOT NULL,
-      expired INTEGER NOT NULL
+      expired_at INTEGER NOT NULL
     );
   `);
 

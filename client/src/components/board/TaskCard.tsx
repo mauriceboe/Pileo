@@ -121,7 +121,7 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
               label: taskCompleted ? 'Mark incomplete' : 'Mark completed',
               icon: <CheckCircle size={14} />,
               onClick: () => updateTask(task.id, {
-                completedAt: taskCompleted ? null : new Date().toISOString(),
+                completedAt: taskCompleted ? null : new Date(),
               }),
             },
             'divider',
