@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core';
 import type { TaskWithRelations } from '../api/tasks.api';
 import { useBoardStore } from '../stores/board.store';
@@ -14,12 +14,14 @@ export function useDragAndDrop() {
     activeTask: null,
     activeColumnId: null,
   });
+  const lastMoveRef = useRef<string>('');
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const task = active.data.current?.task as TaskWithRelations | undefined;
     if (!task) return;
 
+    lastMoveRef.current = '';
     setDragState({
       activeTask: task,
       activeColumnId: task.columnId,
@@ -69,6 +71,11 @@ export function useDragAndDrop() {
 
     if (currentColumnId === targetColumnId && currentIndex === targetIndex) return;
 
+    // Prevent re-entrant moves that cause infinite loops
+    const moveKey = `${activeTask.id}:${currentColumnId}:${targetColumnId}:${targetIndex}`;
+    if (lastMoveRef.current === moveKey) return;
+    lastMoveRef.current = moveKey;
+
     moveTaskOptimistic(activeTask.id, currentColumnId, targetColumnId, targetIndex);
   }, [tasksByColumn, moveTaskOptimistic]);
 
@@ -104,6 +111,7 @@ export function useDragAndDrop() {
   }, [tasksByColumn, moveTask]);
 
   const handleDragCancel = useCallback(() => {
+    lastMoveRef.current = '';
     setDragState({ activeTask: null, activeColumnId: null });
   }, []);
 
