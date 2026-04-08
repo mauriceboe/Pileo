@@ -25,6 +25,14 @@ export const authRateLimit = rateLimit({
   message: { error: { code: 'RATE_LIMITED', message: 'Too many authentication attempts, please try again later' } },
 });
 
+export const shareTokenRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later' } },
+});
+
 export const uploadRateLimit = rateLimit({
   windowMs: RATE_LIMIT_UPLOAD_WINDOW_MS,
   max: RATE_LIMIT_UPLOAD_MAX,

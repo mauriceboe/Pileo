@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Shield, Plus, Trash2 } from 'lucide-react';
+import { Shield, Plus, Trash2, Settings } from 'lucide-react';
 import type { UserPublic, UserRole } from '@pileo/shared';
 import { USER_ROLES } from '@pileo/shared';
 import * as adminApi from '../api/admin.api';
@@ -16,6 +16,8 @@ export function AdminPage() {
   const [users, setUsers] = useState<UserPublic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [isTogglingRegistration, setIsTogglingRegistration] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true);
@@ -31,7 +33,17 @@ export function AdminPage() {
 
   useEffect(() => {
     loadUsers();
+    adminApi.getSettings().then((s) => setRegistrationEnabled(s.registrationEnabled)).catch(() => {});
   }, [loadUsers]);
+
+  const handleToggleRegistration = async () => {
+    setIsTogglingRegistration(true);
+    try {
+      const updated = await adminApi.updateSettings({ registrationEnabled: !registrationEnabled });
+      setRegistrationEnabled(updated.registrationEnabled);
+    } catch {}
+    finally { setIsTogglingRegistration(false); }
+  };
 
   const handleRoleChange = async (userId: string, role: UserRole): Promise<void> => {
     try {
@@ -80,6 +92,29 @@ export function AdminPage() {
           <Plus size={16} />
           Create User
         </Button>
+      </div>
+
+      <div className={styles.settingsCard}>
+        <div className={styles.settingsHeader}>
+          <Settings size={16} />
+          <span className={styles.settingsTitle}>Settings</span>
+        </div>
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <span className={styles.settingLabel}>Public Registration</span>
+            <span className={styles.settingDescription}>
+              Allow new users to create accounts via the register page
+            </span>
+          </div>
+          <button
+            className={`${styles.toggle} ${registrationEnabled ? styles.toggleOn : ''}`}
+            onClick={handleToggleRegistration}
+            disabled={isTogglingRegistration}
+            aria-label="Toggle registration"
+          >
+            <span className={styles.toggleKnob} />
+          </button>
+        </div>
       </div>
 
       {isLoading ? (

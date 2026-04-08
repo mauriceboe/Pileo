@@ -6,6 +6,7 @@ import { validate } from '../middleware/validate.middleware.js';
 import { adminCreateUserSchema, adminUpdateRoleSchema } from '@pileo/shared';
 import type { AdminCreateUserInput, AdminUpdateRoleInput } from '@pileo/shared';
 import * as adminService from '../services/admin.service.js';
+import * as settingsService from '../services/settings.service.js';
 
 const router = Router();
 
@@ -36,6 +37,28 @@ router.patch('/users/:userId/role', validate(adminUpdateRoleSchema), async (req:
     body,
   );
   res.status(200).json({ data: user });
+});
+
+// GET /admin/settings
+router.get('/settings', (_req: Request, res: Response): void => {
+  res.status(200).json({
+    data: {
+      registrationEnabled: settingsService.isRegistrationEnabled(),
+    },
+  });
+});
+
+// PATCH /admin/settings
+router.patch('/settings', (req: Request, res: Response): void => {
+  const { registrationEnabled } = req.body;
+  if (typeof registrationEnabled === 'boolean') {
+    settingsService.setSetting('registration_enabled', String(registrationEnabled));
+  }
+  res.status(200).json({
+    data: {
+      registrationEnabled: settingsService.isRegistrationEnabled(),
+    },
+  });
 });
 
 export { router as adminRoutes };

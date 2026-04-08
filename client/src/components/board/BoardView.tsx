@@ -20,6 +20,7 @@ import { LiveCursors } from './LiveCursors';
 import { TaskDetail } from '../task/TaskDetail';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import styles from './board-view.module.css';
+import columnStyles from './column.module.css';
 
 interface BoardViewProps {
   backgroundImage?: string | null;
@@ -30,16 +31,27 @@ export function BoardView({ backgroundImage }: BoardViewProps) {
   const fetchTasks = useBoardStore((state) => state.fetchTasks);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Horizontal scroll with mouse wheel
+  // Horizontal scroll with mouse wheel (unless hovering a scrollable task area)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const handleWheel = (e: WheelEvent) => {
-      // Only hijack if vertical scroll and container can scroll horizontally
-      if (e.deltaY !== 0 && el.scrollWidth > el.clientWidth) {
-        e.preventDefault();
-        el.scrollBy({ left: e.deltaY * 2, behavior: 'auto' });
+      if (e.deltaY === 0 || el.scrollWidth <= el.clientWidth) return;
+
+      // Check if the mouse is over a vertically scrollable task area
+      const target = e.target as HTMLElement | null;
+      const taskArea = target?.closest(`.${columnStyles.taskArea}`) as HTMLElement | null;
+      if (taskArea && taskArea.scrollHeight > taskArea.clientHeight) {
+        const atTop = taskArea.scrollTop === 0;
+        const atBottom = Math.abs(taskArea.scrollTop + taskArea.clientHeight - taskArea.scrollHeight) < 1;
+        // Let the column scroll vertically unless we've hit a boundary
+        if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) {
+          return;
+        }
       }
+
+      e.preventDefault();
+      el.scrollBy({ left: e.deltaY * 2, behavior: 'auto' });
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);

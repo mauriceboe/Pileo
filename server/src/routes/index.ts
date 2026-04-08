@@ -14,6 +14,7 @@ import { taskAttachmentRouter, attachmentRouter } from './attachment.routes.js';
 import { notificationRouter } from './notification.routes.js';
 import { projectLabelRouter, labelRouter } from './label.routes.js';
 import { adminRoutes } from './admin.routes.js';
+import { shareRouter } from './share.routes.js';
 import { authRateLimit } from '../middleware/rate-limit.middleware.js';
 
 export function registerRoutes(): Router {
@@ -44,6 +45,7 @@ export function registerRoutes(): Router {
   router.use('/attachments', attachmentRouter);
   router.use('/notifications', notificationRouter);
   router.use('/admin', adminRoutes);
+  router.use('/', shareRouter);
 
   return router;
 }

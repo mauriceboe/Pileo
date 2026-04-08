@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '@pileo/shared';
@@ -25,6 +25,16 @@ export function RegisterPage() {
   const navigate = useNavigate();
   const registerAction = useAuthStore((state) => state.register);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [registrationDisabled, setRegistrationDisabled] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/v1/auth/registration-status')
+      .then((r) => r.json())
+      .then((body) => {
+        if (!body.data?.enabled) setRegistrationDisabled(true);
+      })
+      .catch(() => {});
+  }, []);
 
   const {
     register,
@@ -48,6 +58,26 @@ export function RegisterPage() {
       }
     }
   };
+
+  if (registrationDisabled) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <div className={styles.header}>
+            <h1 className={styles.title}>Pileo</h1>
+            <p className={styles.subtitle}>Registration is currently disabled</p>
+          </div>
+          <div className={styles.footer}>
+            <p className={styles.footerText}>
+              Please contact an administrator or{' '}
+              <Link to="/login" className={styles.link}>sign in</Link>
+              {' '}if you already have an account.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

@@ -13,6 +13,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { SharedBoardPage } from './pages/SharedBoardPage';
 import { useAuthStore } from './stores/auth.store';
 
 export function App() {
@@ -28,6 +29,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/shared/:token" element={<SharedBoardPage />} />
         <Route element={<ProtectedRoute />}>
           {/* Dashboard — fullscreen, no sidebar */}
           <Route path="/" element={<DashboardPage />} />

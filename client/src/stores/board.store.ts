@@ -25,7 +25,7 @@ interface BoardState {
   deleteColumn: (columnId: string) => Promise<void>;
   reorderColumns: (boardId: string, columnIds: string[]) => Promise<void>;
 
-  createTask: (columnId: string, title: string) => Promise<void>;
+  createTask: (columnId: string, title: string) => Promise<string>;
   updateTask: (taskId: string, data: Parameters<typeof tasksApi.updateTask>[1]) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   moveTask: (taskId: string, toColumnId: string, newPosition: number) => Promise<void>;
@@ -154,7 +154,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
   },
 
-  createTask: async (columnId: string, title: string): Promise<void> => {
+  createTask: async (columnId: string, title: string): Promise<string> => {
     const task = await tasksApi.createTask(columnId, { title, priority: 'none' });
     set((state) => {
       const columnTasks = state.tasksByColumn[columnId] ?? [];
@@ -165,6 +165,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         },
       };
     });
+    return task.id;
   },
 
   updateTask: async (taskId, data): Promise<void> => {

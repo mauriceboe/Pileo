@@ -2,11 +2,31 @@ import { WEBSOCKET_EVENTS } from '@pileo/shared';
 import type { PileoSocket } from '../broadcast.js';
 import { joinRoom, leaveRoom, broadcastToBoard, getRoomUsers } from '../broadcast.js';
 import { db } from '../../config/database.js';
-import { users } from '../../db/schema/index.js';
+import { boards, users } from '../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { logger } from '../../config/logger.js';
+import { getMemberRole } from '../../services/project.service.js';
 
 export async function handleJoin(ws: PileoSocket, boardId: string): Promise<void> {
+  // Verify the user has access to this board's project
+  const boardRows = await db
+    .select({ projectId: boards.projectId })
+    .from(boards)
+    .where(eq(boards.id, boardId))
+    .limit(1);
+
+  const board = boardRows[0];
+  if (!board) {
+    logger.warn({ userId: ws.userId, boardId }, 'WebSocket join: board not found');
+    return;
+  }
+
+  const role = await getMemberRole(board.projectId, ws.userId);
+  if (!role) {
+    logger.warn({ userId: ws.userId, boardId }, 'WebSocket join: access denied');
+    return;
+  }
+
   joinRoom(ws, boardId);
 
   // Fetch user info for presence announcement

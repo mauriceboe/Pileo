@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, X, Crown, User as UserIcon } from 'lucide-react';
+import { UserPlus, X, Crown, User as UserIcon, Link, Copy, Check, Trash2 } from 'lucide-react';
 import { Dialog } from './Dialog';
 import { Avatar } from './Avatar';
 import { useProjectStore } from '../../stores/project.store';
 import { useAuthStore } from '../../stores/auth.store';
+import { useBoardStore } from '../../stores/board.store';
 import * as projectsApi from '../../api/projects.api';
 import * as adminApi from '../../api/admin.api';
+import * as shareApi from '../../api/share.api';
 import type { ProjectMember, UserPublic } from '@pileo/shared';
 import styles from './share-dialog.module.css';
 
@@ -17,16 +19,29 @@ interface ShareDialogProps {
 export function ShareDialog({ open, onClose }: ShareDialogProps) {
   const selectedProject = useProjectStore((s) => s.selectedProject);
   const currentUser = useAuthStore((s) => s.user);
+  const board = useBoardStore((s) => s.board);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [allUsers, setAllUsers] = useState<UserPublic[]>([]);
   const [error, setError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [isCreatingLink, setIsCreatingLink] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!open || !selectedProject) return;
     projectsApi.listMembers(selectedProject.id).then(setMembers).catch(() => {});
     adminApi.listUsers().then(setAllUsers).catch(() => {});
   }, [open, selectedProject]);
+
+  // Load existing share link
+  useEffect(() => {
+    if (!open || !board) return;
+    setShareToken(null);
+    shareApi.getShareLink(board.id).then((info) => {
+      setShareToken(info?.token ?? null);
+    }).catch(() => {});
+  }, [open, board]);
 
   const memberIds = new Set(members.map((m) => m.userId));
   const availableUsers = allUsers.filter((u) => !memberIds.has(u.id) && u.id !== currentUser?.id);
@@ -53,12 +68,82 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
     } catch {}
   };
 
+  const shareUrl = shareToken
+    ? `${window.location.origin}/shared/${shareToken}`
+    : null;
+
+  const handleCreateLink = async () => {
+    if (!board) return;
+    setIsCreatingLink(true);
+    try {
+      const token = await shareApi.createShareLink(board.id);
+      setShareToken(token);
+    } catch {
+      setError('Could not create share link.');
+    } finally {
+      setIsCreatingLink(false);
+    }
+  };
+
+  const handleDeleteLink = async () => {
+    if (!board) return;
+    try {
+      await shareApi.deleteShareLink(board.id);
+      setShareToken(null);
+    } catch {}
+  };
+
+  const handleCopy = () => {
+    if (!shareUrl) return;
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (!selectedProject) return null;
 
   return (
     <Dialog open={open} onClose={onClose} title="Share Project">
       <div className={styles.content}>
         {error && <p className={styles.error}>{error}</p>}
+
+        {/* Public share link */}
+        {board && (
+          <>
+            <div className={styles.sectionLabel}>Public View-Only Link</div>
+            {shareUrl ? (
+              <div className={styles.shareLinkRow}>
+                <div className={styles.shareLinkIcon}>
+                  <Link size={14} />
+                </div>
+                <input
+                  className={styles.shareLinkInput}
+                  value={shareUrl}
+                  readOnly
+                  onFocus={(e) => e.target.select()}
+                />
+                <button className={styles.shareLinkCopy} onClick={handleCopy} title="Copy link">
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+                <button className={styles.shareLinkDelete} onClick={handleDeleteLink} title="Remove link">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                className={styles.createLinkBtn}
+                onClick={handleCreateLink}
+                disabled={isCreatingLink}
+              >
+                <Link size={14} />
+                {isCreatingLink ? 'Creating...' : 'Create public link'}
+              </button>
+            )}
+            <p className={styles.shareLinkHint}>
+              Anyone with this link can see the board columns and task titles. No details, no editing.
+            </p>
+          </>
+        )}
 
         {/* Current members */}
         <div className={styles.sectionLabel}>Members</div>

@@ -177,6 +177,22 @@ export function initializeDatabase(): void {
       sess TEXT NOT NULL,
       expired_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+    INSERT OR IGNORE INTO app_settings (key, value) VALUES ('registration_enabled', 'true');
+
+    CREATE TABLE IF NOT EXISTS share_tokens (
+      id TEXT PRIMARY KEY,
+      board_id TEXT NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_share_tokens_token ON share_tokens(token);
+    CREATE INDEX IF NOT EXISTS idx_share_tokens_board ON share_tokens(board_id);
   `);
 
   const projectColumns = sqlite.pragma('table_info(projects)') as Array<{ name: string }>;

@@ -9,10 +9,19 @@ import {
   resetPasswordSchema,
 } from '@pileo/shared';
 import * as authService from '../services/auth.service.js';
+import { isRegistrationEnabled } from '../services/settings.service.js';
 
 const router = Router();
 
+router.get('/registration-status', (_req: Request, res: Response): void => {
+  res.status(200).json({ data: { enabled: isRegistrationEnabled() } });
+});
+
 router.post('/register', validate(registerSchema), async (req: Request, res: Response): Promise<void> => {
+  if (!isRegistrationEnabled()) {
+    res.status(403).json({ error: { code: 'REGISTRATION_DISABLED', message: 'Registration is currently disabled' } });
+    return;
+  }
   const user = await authService.register((req as Request & { validatedBody: unknown }).validatedBody as Parameters<typeof authService.register>[0], req);
   res.status(201).json({ data: user });
 });

@@ -6,6 +6,20 @@ import type {
 } from '@pileo/shared';
 import { apiClient } from './client';
 
+export interface AppSettings {
+  registrationEnabled: boolean;
+}
+
+export async function getSettings(): Promise<AppSettings> {
+  const response = await apiClient.get<ApiSuccessResponse<AppSettings>>('/admin/settings');
+  return response.data;
+}
+
+export async function updateSettings(settings: Partial<AppSettings>): Promise<AppSettings> {
+  const response = await apiClient.patch<ApiSuccessResponse<AppSettings>>('/admin/settings', settings);
+  return response.data;
+}
+
 export async function listUsers(): Promise<UserPublic[]> {
   const response = await apiClient.get<ApiSuccessResponse<UserPublic[]>>('/admin/users');
   return response.data;

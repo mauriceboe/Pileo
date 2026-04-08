@@ -59,14 +59,16 @@ export function TaskDueDate({ taskId, dueDate }: TaskDueDateProps) {
               {isDueToday && ' (today)'}
               {isOverdue && ` (${formatDistanceToNow(parsedDate, { addSuffix: true })})`}
             </span>
-            <button
-              type="button"
+            <span
+              role="button"
+              tabIndex={0}
               className={styles.clearButton}
               onClick={handleClear}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleClear(e as unknown as React.MouseEvent); }}
               aria-label="Clear due date"
             >
               <X size={12} />
-            </button>
+            </span>
           </>
         ) : (
           <span className={styles.placeholder}>Set due date</span>
