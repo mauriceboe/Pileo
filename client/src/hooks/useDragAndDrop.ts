@@ -9,19 +9,20 @@ interface DragState {
 }
 
 export function useDragAndDrop() {
-  const { tasksByColumn, moveTaskOptimistic, moveTask } = useBoardStore();
   const [dragState, setDragState] = useState<DragState>({
     activeTask: null,
     activeColumnId: null,
   });
-  const lastMoveRef = useRef<string>('');
+  const movingRef = useRef(false);
+  const lastTargetRef = useRef('');
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const task = active.data.current?.task as TaskWithRelations | undefined;
     if (!task) return;
 
-    lastMoveRef.current = '';
+    movingRef.current = false;
+    lastTargetRef.current = '';
     setDragState({
       activeTask: task,
       activeColumnId: task.columnId,
@@ -30,7 +31,7 @@ export function useDragAndDrop() {
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over || movingRef.current) return;
 
     const activeTask = active.data.current?.task as TaskWithRelations | undefined;
     if (!activeTask) return;
@@ -40,6 +41,8 @@ export function useDragAndDrop() {
 
     let targetColumnId: string;
     let targetIndex: number;
+
+    const { tasksByColumn, moveTaskOptimistic } = useBoardStore.getState();
 
     if (overType === 'task' && overTask) {
       targetColumnId = overTask.columnId;
@@ -65,28 +68,36 @@ export function useDragAndDrop() {
 
     if (!currentColumnId) return;
 
-    // Only move if something changed
     const currentTasks = tasksByColumn[currentColumnId] ?? [];
     const currentIndex = currentTasks.findIndex((t) => t.id === activeTask.id);
 
     if (currentColumnId === targetColumnId && currentIndex === targetIndex) return;
 
-    // Prevent re-entrant moves that cause infinite loops
-    const moveKey = `${activeTask.id}:${currentColumnId}:${targetColumnId}:${targetIndex}`;
-    if (lastMoveRef.current === moveKey) return;
-    lastMoveRef.current = moveKey;
+    // Deduplicate: skip if same target as last move
+    const targetKey = `${targetColumnId}:${targetIndex}`;
+    if (lastTargetRef.current === targetKey) return;
+    lastTargetRef.current = targetKey;
 
+    // Lock to prevent re-entrant calls during React batched updates
+    movingRef.current = true;
     moveTaskOptimistic(activeTask.id, currentColumnId, targetColumnId, targetIndex);
-  }, [tasksByColumn, moveTaskOptimistic]);
+    // Release lock after React has processed the update
+    requestAnimationFrame(() => { movingRef.current = false; });
+  }, []);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     const activeTask = active.data.current?.task as TaskWithRelations | undefined;
 
+    movingRef.current = false;
+    lastTargetRef.current = '';
+
     if (!activeTask || !over) {
       setDragState({ activeTask: null, activeColumnId: null });
       return;
     }
+
+    const { tasksByColumn, moveTask } = useBoardStore.getState();
 
     // Find the current position after optimistic move
     let finalColumnId: string | null = null;
@@ -108,10 +119,11 @@ export function useDragAndDrop() {
     }
 
     setDragState({ activeTask: null, activeColumnId: null });
-  }, [tasksByColumn, moveTask]);
+  }, []);
 
   const handleDragCancel = useCallback(() => {
-    lastMoveRef.current = '';
+    movingRef.current = false;
+    lastTargetRef.current = '';
     setDragState({ activeTask: null, activeColumnId: null });
   }, []);
 
