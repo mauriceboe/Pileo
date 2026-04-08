@@ -85,7 +85,7 @@ export const ALLOWED_ARCHIVE_EXTENSIONS = ["zip", "tar.gz"] as const;
 // -- Rate Limiting --
 export const RATE_LIMIT_GLOBAL_MAX = 800;
 export const RATE_LIMIT_GLOBAL_WINDOW_MS = 60_000;
-export const RATE_LIMIT_AUTH_MAX = 5;
+export const RATE_LIMIT_AUTH_MAX = 15;
 export const RATE_LIMIT_AUTH_WINDOW_MS = 60_000;
 export const RATE_LIMIT_UPLOAD_MAX = 10;
 export const RATE_LIMIT_UPLOAD_WINDOW_MS = 60_000;

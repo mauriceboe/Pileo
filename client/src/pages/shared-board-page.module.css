@@ -95,6 +95,23 @@
   color: #374151;
 }
 
+.spacer {
+  flex: 1;
+}
+
+.viewers {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: #F3F4F6;
+  flex-shrink: 0;
+}
+
 .badge {
   font-size: 10px;
   font-weight: 600;

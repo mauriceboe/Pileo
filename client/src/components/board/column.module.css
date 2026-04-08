@@ -29,6 +29,8 @@
   font-size: var(--font-size-sm);
 }
 
+
+
 @media (max-width: 767px) {
   .column {
     width: 85vw;

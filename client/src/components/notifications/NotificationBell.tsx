@@ -3,6 +3,8 @@ import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Notification } from '@pileo/shared';
 import { useNotificationStore } from '../../stores/notification.store';
+import { useBoardStore } from '../../stores/board.store';
+import * as tasksApi from '../../api/tasks.api';
 import { NotificationPanel } from './NotificationPanel';
 import styles from './notification-bell.module.css';
 
@@ -41,12 +43,19 @@ export function NotificationBell() {
   }, [open]);
 
   const handleNavigate = useCallback(
-    (notification: Notification) => {
+    async (notification: Notification) => {
       setOpen(false);
-      // Navigate based on resource type
       if (notification.resourceType === 'task') {
-        // Tasks don't have a standalone page; navigate is best-effort
-        navigate(`/`);
+        try {
+          const context = await tasksApi.getTaskContext(notification.resourceId);
+          navigate(`/projects/${context.projectId}/boards/${context.boardId}`);
+          // Wait for navigation, then open task detail
+          setTimeout(() => {
+            useBoardStore.getState().openTaskDetail(context.taskId);
+          }, 300);
+        } catch {
+          navigate('/');
+        }
       } else if (notification.resourceType === 'project') {
         navigate(`/projects/${notification.resourceId}`);
       }

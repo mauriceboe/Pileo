@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useWebSocketStore } from '../../stores/websocket.store';
 import { useAuthStore } from '../../stores/auth.store';
+import { useBoardStore } from '../../stores/board.store';
 import styles from './live-cursors.module.css';
 
 const CURSOR_COLORS = [
@@ -42,6 +43,10 @@ export function LiveCursors({ containerRef }: { containerRef: React.RefObject<HT
 
   const userMap = new Map(presenceUsers.map((u) => [u.userId, u]));
   const taskFocus = useWebSocketStore((s) => s.taskFocus);
+  const isTaskDetailOpen = useBoardStore((s) => s.isTaskDetailOpen);
+
+  // Hide all cursors when current user has a task popup open
+  if (isTaskDetailOpen) return null;
 
   return (
     <>

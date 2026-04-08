@@ -68,14 +68,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: none;
   border-radius: var(--radius-full);
-  background-color: var(--color-text);
-  color: var(--color-text-inverse);
+  background: transparent;
+  cursor: pointer;
   transition: all 120ms ease;
   margin-left: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .avatarButton:hover {
@@ -84,6 +88,29 @@
 
 /* Project / Board name */
 .projectName { font-size: 13px; font-weight: 500; color: var(--color-text-muted); }
+
+.projectSettingsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 100ms ease;
+  flex-shrink: 0;
+}
+
+.projectSettingsBtn:hover {
+  opacity: 1;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
 .separator { color: var(--color-border); font-size: 13px; margin: 0 2px; }
 
 .boardNameBtn {

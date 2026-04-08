@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBoardStore } from '../stores/board.store';
 import { useProjectStore } from '../stores/project.store';
@@ -15,9 +15,7 @@ export function BoardPage() {
   const fetchProjectLabels = useBoardStore((state) => state.fetchProjectLabels);
   const selectProject = useProjectStore((state) => state.selectProject);
   const fetchMembers = useProjectStore((state) => state.fetchMembers);
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
-  // Connect/disconnect WebSocket when board is active
   useWebSocket(boardId);
 
   useEffect(() => {
@@ -27,21 +25,10 @@ export function BoardPage() {
 
   useEffect(() => {
     if (!projectId) return;
-
-    const loadProject = async () => {
-      try {
-        const project = await projectsApi.getProject(projectId);
-        selectProject(project);
-        setBackgroundImage(project.backgroundImage);
-      } catch {
-        // Project fetch failure is non-critical for board rendering
-      }
-    };
-
-    loadProject();
+    projectsApi.getProject(projectId).then(selectProject).catch(() => {});
     fetchMembers(projectId);
     fetchProjectLabels(projectId);
   }, [projectId, selectProject, fetchMembers, fetchProjectLabels]);
 
-  return <BoardView backgroundImage={backgroundImage} />;
+  return <BoardView />;
 }

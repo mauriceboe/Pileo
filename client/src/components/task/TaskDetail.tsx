@@ -13,6 +13,7 @@ import {
   AlignLeft,
   CheckCircle2,
   Link,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useBoardStore } from '../../stores/board.store';
 import { TaskDescription } from './TaskDescription';
@@ -25,6 +26,7 @@ import { TaskChecklist } from './TaskChecklist';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskLinks } from './TaskLinks';
 import { TaskActivity } from './TaskActivity';
+import { TaskCustomFields } from './TaskCustomFields';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import styles from './task-detail.module.css';
 
@@ -156,6 +158,19 @@ export function TaskDetail() {
                     description={selectedTask.description}
                   />
                 </div>
+
+                {/* Custom Fields */}
+                {board && (
+                  <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <span className={styles.sectionIcon}>
+                        <SlidersHorizontal size={15} />
+                      </span>
+                      <h4 className={styles.sectionTitle}>Custom Fields</h4>
+                    </div>
+                    <TaskCustomFields taskId={selectedTask.id} projectId={board.projectId} />
+                  </div>
+                )}
 
                 {/* Checklist */}
                 <div className={styles.section}>

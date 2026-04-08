@@ -6,6 +6,51 @@ import * as shareService from '../services/share.service.js';
 
 const shareRouter = Router();
 
+// --- Live viewer tracking via SSE ---
+const viewersByToken = new Map<string, Set<Response>>();
+
+function broadcastViewerCount(token: string): void {
+  const viewers = viewersByToken.get(token);
+  const count = viewers?.size ?? 0;
+  const data = `data: ${JSON.stringify({ count })}\n\n`;
+  if (viewers) {
+    for (const res of viewers) {
+      res.write(data);
+    }
+  }
+}
+
+// SSE endpoint: GET /shared/:token/viewers
+shareRouter.get(
+  '/shared/:token/viewers',
+  (req: Request, res: Response): void => {
+    const { token } = req.params;
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+
+    let viewers = viewersByToken.get(token!);
+    if (!viewers) {
+      viewers = new Set();
+      viewersByToken.set(token!, viewers);
+    }
+    viewers.add(res);
+    broadcastViewerCount(token!);
+
+    req.on('close', () => {
+      viewers!.delete(res);
+      if (viewers!.size === 0) {
+        viewersByToken.delete(token!);
+      } else {
+        broadcastViewerCount(token!);
+      }
+    });
+  },
+);
+
 // POST /boards/:boardId/share-link — create share link (auth required)
 shareRouter.post(
   '/boards/:boardId/share-link',

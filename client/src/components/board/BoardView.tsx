@@ -22,11 +22,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import styles from './board-view.module.css';
 import columnStyles from './column.module.css';
 
-interface BoardViewProps {
-  backgroundImage?: string | null;
-}
-
-export function BoardView({ backgroundImage }: BoardViewProps) {
+export function BoardView() {
   const { board, isLoading, error, isTaskDetailOpen } = useBoardStore();
   const fetchTasks = useBoardStore((state) => state.fetchTasks);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,12 +38,7 @@ export function BoardView({ backgroundImage }: BoardViewProps) {
       const target = e.target as HTMLElement | null;
       const taskArea = target?.closest(`.${columnStyles.taskArea}`) as HTMLElement | null;
       if (taskArea && taskArea.scrollHeight > taskArea.clientHeight) {
-        const atTop = taskArea.scrollTop === 0;
-        const atBottom = Math.abs(taskArea.scrollTop + taskArea.clientHeight - taskArea.scrollHeight) < 1;
-        // Let the column scroll vertically unless we've hit a boundary
-        if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) {
-          return;
-        }
+        return;
       }
 
       e.preventDefault();
@@ -105,10 +96,6 @@ export function BoardView({ backgroundImage }: BoardViewProps) {
 
   if (!board) return null;
 
-  const containerStyle = backgroundImage
-    ? { backgroundImage: `url(${backgroundImage})` }
-    : undefined;
-
   const sortedColumns = [...board.columns].sort(
     (a, b) => a.position - b.position,
   );
@@ -123,13 +110,13 @@ export function BoardView({ backgroundImage }: BoardViewProps) {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div ref={containerRef} className={styles.container} style={containerStyle}>
-          {sortedColumns.map((column) => (
-            <Column key={column.id} column={column} />
-          ))}
-          <AddColumnButton boardId={board.id} />
-          <LiveCursors containerRef={containerRef} />
-        </div>
+        <div ref={containerRef} className={styles.container}>
+            {sortedColumns.map((column) => (
+              <Column key={column.id} column={column} />
+            ))}
+            <AddColumnButton boardId={board.id} />
+            <LiveCursors containerRef={containerRef} />
+          </div>
 
         <DragOverlay dropAnimation={null}>
           {activeTask ? (

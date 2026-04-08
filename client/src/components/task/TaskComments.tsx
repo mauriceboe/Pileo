@@ -8,6 +8,17 @@ import * as commentsApi from '../../api/comments.api';
 import type { CommentWithAuthor } from '../../api/comments.api';
 import styles from './task-comments.module.css';
 
+function renderMentions(text: string): React.ReactNode {
+  const parts = text.split(/(@\w+)/g);
+  return parts.map((part, i) =>
+    part.startsWith('@') ? (
+      <span key={i} className={styles.mention}>{part}</span>
+    ) : (
+      part
+    ),
+  );
+}
+
 interface TaskCommentsProps {
   taskId: string;
 }
@@ -254,7 +265,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
                     </div>
                   </div>
                 ) : (
-                  <p className={styles.commentContent}>{comment.content}</p>
+                  <p className={styles.commentContent}>{renderMentions(comment.content)}</p>
                 )}
 
                 {isOwn && !isEditing && (

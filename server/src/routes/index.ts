@@ -15,12 +15,13 @@ import { notificationRouter } from './notification.routes.js';
 import { projectLabelRouter, labelRouter } from './label.routes.js';
 import { adminRoutes } from './admin.routes.js';
 import { shareRouter } from './share.routes.js';
-import { authRateLimit } from '../middleware/rate-limit.middleware.js';
+import { projectCustomFieldRouter, customFieldRouter, taskCustomValueRouter } from './custom-field.routes.js';
+
 
 export function registerRoutes(): Router {
   const router = Router();
 
-  router.use('/auth', authRateLimit, authRoutes);
+  router.use('/auth', authRoutes);
   router.use('/users', userRoutes);
   router.use('/projects', projectRoutes);
   router.use('/projects/:projectId/members', memberRoutes);
@@ -28,6 +29,9 @@ export function registerRoutes(): Router {
   router.use('/projects/:projectId/activity', projectActivityRouter);
   router.use('/projects/:projectId/labels', projectLabelRouter);
   router.use('/labels', labelRouter);
+  router.use('/projects/:projectId/custom-fields', projectCustomFieldRouter);
+  router.use('/custom-fields', customFieldRouter);
+  router.use('/tasks/:taskId/custom-values', taskCustomValueRouter);
   router.use('/boards', boardRouter);
   router.use('/boards/:boardId/columns', boardColumnRouter);
   router.use('/boards/:boardId/tasks', boardTaskRouter);

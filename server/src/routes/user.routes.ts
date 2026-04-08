@@ -31,7 +31,9 @@ router.patch('/me/avatar', upload.single('avatar'), async (req: Request, res: Re
     res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'No file provided' } });
     return;
   }
-  const user = await userService.updateAvatar((req as AuthenticatedRequest).user.id, file.path);
+  // Store only the filename, serve via /uploads/<filename>
+  const avatarUrl = `/uploads/${file.filename}`;
+  const user = await userService.updateAvatar((req as AuthenticatedRequest).user.id, avatarUrl);
   res.status(200).json({ data: user });
 });
 

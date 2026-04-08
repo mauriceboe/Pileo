@@ -11,9 +11,40 @@
   padding-bottom: 16px;
 }
 
+.avatarWrapper {
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.avatarWrapper:hover .avatarOverlay {
+  opacity: 1;
+}
+
+.fileInput {
+  display: none;
+}
+
 .identity {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .name {
@@ -21,6 +52,63 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.01em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nameEditIcon {
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.name:hover .nameEditIcon {
+  opacity: 1;
+}
+
+.nameEdit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nameInput {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+  flex: 1;
+}
+
+.nameInput:focus {
+  border-color: var(--color-primary);
+}
+
+.nameBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nameBtn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .username {

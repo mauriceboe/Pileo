@@ -20,7 +20,7 @@ const envSchema = z.object({
   PILEO_TRUST_PROXY: z.coerce.boolean().default(false),
 
   PILEO_UPLOAD_DIR: z.string().default('./uploads'),
-  PILEO_MAX_FILE_SIZE: z.coerce.number().int().positive().default(10485760), // 10MB
+  PILEO_MAX_FILE_SIZE: z.coerce.number().int().positive().default(104857600), // 100MB
 
   PILEO_SMTP_HOST: z.string().optional(),
   PILEO_SMTP_PORT: z.coerce.number().int().positive().optional(),

@@ -97,12 +97,19 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
     banners.push({ text: labels[task.priority] ?? '', className: cls[task.priority] ?? '' });
   }
 
-  const hasChecklist = (task.checklistTotal ?? 0) > 0;
-  const hasComments = (task.commentCount ?? 0) > 0;
-  const hasAttachments = (task.attachmentCount ?? 0) > 0;
-  const hasLinks = (task.linkCount ?? 0) > 0;
   const hasLabels = (task.labels?.length ?? 0) > 0;
-  const hasMeta = parsedDueDate || hasChecklist || hasComments || hasAttachments || hasLinks || hasLabels;
+  const hasCustomBadges = (task.customBadges?.length ?? 0) > 0;
+  const tagCount = (task.labels?.length ?? 0) + (task.customBadges?.length ?? 0);
+
+  // Tags take priority — progressively hide meta icons as tags increase
+  // Remove: attachments first, then links, comments, checklist, date
+  const hasAttachments = tagCount < 2 && (task.attachmentCount ?? 0) > 0;
+  const hasLinks = tagCount < 2 && (task.linkCount ?? 0) > 0;
+  const hasComments = tagCount < 3 && (task.commentCount ?? 0) > 0;
+  const hasChecklist = tagCount < 3 && (task.checklistTotal ?? 0) > 0;
+  const showDueDate = tagCount < 4 && !!parsedDueDate;
+
+  const hasMeta = showDueDate || hasChecklist || hasComments || hasAttachments || hasLinks || hasLabels;
 
   return (
     <div ref={setNodeRef} style={style} className={cardClassName} onClick={handleClick} onContextMenu={handleContextMenu} {...attributes} {...listeners}>
@@ -163,22 +170,33 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
 
       {task.description && <p className={styles.description}>{task.description}</p>}
 
+      {hasCustomBadges && (
+        <div className={styles.customBadges}>
+          {task.customBadges!.map((badge, i) => (
+            <span key={i} className={styles.customBadge}>
+              <span className={styles.customBadgeLabel}>{badge.fieldName}</span>
+              <span className={styles.customBadgeValue}>{badge.value}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {hasMeta && (
         <div className={styles.meta}>
           <div className={styles.metaLeft}>
-            {parsedDueDate && (
+            {showDueDate && (
               <span className={`${styles.metaItem} ${isOverdue && !taskCompleted ? styles.metaOverdue : ''}`}>
-                <Calendar size={11} /> {format(parsedDueDate, 'MMM d, yyyy')}
+                <Calendar size={11} /> {format(parsedDueDate!, 'MMM d, yyyy')}
               </span>
             )}
-            {hasComments && <span className={styles.metaItem}><MessageSquare size={11} /> {task.commentCount}</span>}
             {hasChecklist && (
               <span className={`${styles.metaItem} ${task.checklistCompleted === task.checklistTotal ? styles.metaDone : ''}`}>
                 <CheckSquare size={11} /> {task.checklistCompleted}/{task.checklistTotal}
               </span>
             )}
-            {hasAttachments && <span className={styles.metaItem}><Paperclip size={11} /> {task.attachmentCount}</span>}
+            {hasComments && <span className={styles.metaItem}><MessageSquare size={11} /> {task.commentCount}</span>}
             {hasLinks && <span className={styles.metaItem}><Link size={11} /> {task.linkCount}</span>}
+            {hasAttachments && <span className={styles.metaItem}><Paperclip size={11} /> {task.attachmentCount}</span>}
           </div>
           {hasLabels && (
             <div className={styles.metaRight}>

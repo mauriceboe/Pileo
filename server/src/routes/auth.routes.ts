@@ -10,7 +10,6 @@ import {
 } from '@pileo/shared';
 import * as authService from '../services/auth.service.js';
 import { isRegistrationEnabled } from '../services/settings.service.js';
-
 const router = Router();
 
 router.get('/registration-status', (_req: Request, res: Response): void => {

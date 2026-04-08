@@ -1,0 +1,247 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 16px;
+  margin: 0;
+}
+
+.fieldList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Field card */
+.fieldCard {
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.fieldHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.fieldHeader:hover { background: var(--color-surface-hover); }
+
+.fieldHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fieldName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.fieldTypeBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.cardBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.disabledBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* Editor panel */
+.editor {
+  padding: 14px;
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.editorField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.editorInput {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 150ms ease;
+}
+
+.editorInput:focus { border-color: var(--color-primary); }
+
+/* Dropdown options */
+.optionsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.optionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--color-surface-hover);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.optionRemoveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.optionRemoveBtn:hover {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.optionAddRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.optionAddRow .editorInput {
+  flex: 1;
+}
+
+/* Toggle switches */
+.editorSwitches {
+  display: flex;
+  gap: 8px;
+}
+
+.switchBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.switchBtn:hover {
+  border-color: var(--color-text-muted);
+}
+
+.switchActive {
+  background: rgba(59, 130, 246, 0.06);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Footer with delete */
+.editorFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* Add new field */
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 100ms ease;
+}
+
+.addButton:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.addFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

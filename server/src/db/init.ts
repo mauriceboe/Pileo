@@ -178,6 +178,32 @@ export function initializeDatabase(): void {
       expired_at INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS custom_fields (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'text_small',
+      options TEXT,
+      position INTEGER NOT NULL DEFAULT 0,
+      show_on_card INTEGER NOT NULL DEFAULT 0,
+      is_enabled INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_custom_fields_project ON custom_fields(project_id, position);
+
+    CREATE TABLE IF NOT EXISTS task_custom_values (
+      id TEXT PRIMARY KEY,
+      task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+      field_id TEXT NOT NULL REFERENCES custom_fields(id) ON DELETE CASCADE,
+      value TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE(task_id, field_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_task_custom_values_task ON task_custom_values(task_id);
+    CREATE INDEX IF NOT EXISTS idx_task_custom_values_field ON task_custom_values(field_id);
+
     CREATE TABLE IF NOT EXISTS app_settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL

@@ -1,4 +1,4 @@
-/* Board container — light gray background like MeisterTask */
+/* Board container */
 .container {
   position: relative;
   display: flex;
@@ -9,9 +9,6 @@
   height: calc(100vh - var(--topbar-height));
   align-items: stretch;
   background-color: #F4F5F7;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 [data-theme='dark'] .container {

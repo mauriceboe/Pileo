@@ -24,6 +24,7 @@ import {
 import { getMemberRole, requireRole } from './project.service.js';
 import * as activityService from './activity.service.js';
 import { broadcastTaskCreated, broadcastTaskUpdated, broadcastTaskDeleted, broadcastTaskMoved } from '../websocket/handlers/task.handler.js';
+import * as customFieldService from './custom-field.service.js';
 import type {
   CreateTaskInput,
   UpdateTaskInput,
@@ -333,6 +334,15 @@ export async function list(
   const attachmentCountByTask = new Map(attachmentCountRows.map((r) => [r.taskId, r.count]));
   const linkCountByTask = new Map(linkCountRows.map((r) => [r.taskId, r.count]));
 
+  // Load custom field card badges
+  const projectFields = customFieldService.listFields(boardRow.projectId);
+  const cardFields = projectFields.filter((f) => f.showOnCard && f.isEnabled);
+  const customValuesByTask = cardFields.length > 0
+    ? customFieldService.getTasksValues(taskIds)
+    : new Map<string, { fieldId: string; value: string }[]>();
+
+  const cardFieldMap = new Map(cardFields.map((f) => [f.id, f]));
+
   // Group tasks by column with enriched data
   const result: Record<string, unknown[]> = {};
   for (const colId of columnIds) {
@@ -340,6 +350,16 @@ export async function list(
   }
 
   for (const task of allTasks) {
+    // Build custom badges for this task
+    const customBadges: Array<{ fieldName: string; value: string }> = [];
+    const taskCustomValues = customValuesByTask.get(task.id) ?? [];
+    for (const cv of taskCustomValues) {
+      const field = cardFieldMap.get(cv.fieldId);
+      if (field && cv.value) {
+        customBadges.push({ fieldName: field.name, value: cv.value });
+      }
+    }
+
     const enriched = {
       ...task,
       assignees: assigneesByTask.get(task.id) ?? [],
@@ -349,6 +369,7 @@ export async function list(
       checklistCompleted: checklistCompletedByTask.get(task.id) ?? 0,
       attachmentCount: attachmentCountByTask.get(task.id) ?? 0,
       linkCount: linkCountByTask.get(task.id) ?? 0,
+      customBadges,
     };
     result[task.columnId]!.push(enriched);
   }
@@ -819,4 +840,16 @@ export async function move(
 
   logger.info({ taskId, userId, from: context.columnId, to: targetColumnId, position: targetPosition }, 'Task moved');
   return result;
+}
+
+export async function getContext(
+  taskId: string,
+  userId: string,
+): Promise<{ taskId: string; boardId: string; projectId: string }> {
+  const context = await resolveTaskContext(taskId);
+  const role = await getMemberRole(context.projectId, userId);
+  if (!role) {
+    throw new NotFoundError('Task', taskId);
+  }
+  return { taskId: context.taskId, boardId: context.boardId, projectId: context.projectId };
 }

@@ -41,6 +41,12 @@ columnTaskRouter.post('/', validate(createTaskSchema), async (req: Request, res:
 const taskRouter = Router();
 taskRouter.use(authenticate);
 
+// GET /tasks/:taskId/context — resolve board + project for a task
+taskRouter.get('/:taskId/context', async (req: Request, res: Response): Promise<void> => {
+  const context = await taskService.getContext(req.params.taskId!, (req as AuthenticatedRequest).user.id);
+  res.status(200).json({ data: context });
+});
+
 // GET /tasks/:taskId
 taskRouter.get('/:taskId', async (req: Request, res: Response): Promise<void> => {
   const task = await taskService.getById(req.params.taskId!, (req as AuthenticatedRequest).user.id);

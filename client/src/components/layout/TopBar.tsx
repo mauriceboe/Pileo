@@ -1,15 +1,18 @@
 import { useState, useRef } from 'react';
-import { Menu, User, Settings, UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { Menu, Settings, UserPlus, Pencil, Trash2, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../../stores/project.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useBoardStore } from '../../stores/board.store';
 import * as boardsApi from '../../api/boards.api';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { Avatar } from '../ui/Avatar';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { SettingsDialog } from '../ui/SettingsDialog';
 import { ProfileDialog } from '../ui/ProfileDialog';
 import { ShareDialog } from '../ui/ShareDialog';
+import { Dialog } from '../ui/Dialog';
+import { ProjectSettings } from '../project/ProjectSettings';
 import { BoardPresence } from '../board/BoardPresence';
 import styles from './top-bar.module.css';
 
@@ -21,6 +24,7 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
   const [isEditingBoard, setIsEditingBoard] = useState(false);
   const [boardNameEdit, setBoardNameEdit] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +68,15 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
 
           {/* Project name */}
           <span className={styles.projectName}>{selectedProject?.name ?? 'Pileo'}</span>
+          {selectedProject && isProjectOwner && (
+            <button
+              className={styles.projectSettingsBtn}
+              onClick={() => setProjectSettingsOpen(true)}
+              title="Project settings"
+            >
+              <SlidersHorizontal size={14} />
+            </button>
+          )}
 
           {/* Board name — editable */}
           {board && (
@@ -128,7 +141,7 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
           <div className={styles.hideOnMobile}><NotificationBell /></div>
           <div className={styles.tooltipWrapper}>
             <button className={styles.avatarButton} onClick={() => setProfileOpen(true)} aria-label="Profile">
-              <User size={14} />
+              <Avatar name={currentUser?.displayName ?? 'User'} src={currentUser?.avatarPath} size="sm" />
             </button>
             <span className={styles.tooltip}>Profile</span>
           </div>
@@ -137,6 +150,15 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} />
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+      {selectedProject && (
+        <Dialog
+          open={projectSettingsOpen}
+          onClose={() => setProjectSettingsOpen(false)}
+          title={`${selectedProject.name} — Settings`}
+        >
+          <ProjectSettings project={selectedProject} />
+        </Dialog>
+      )}
     </>
   );
 }

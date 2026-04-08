@@ -6,6 +6,7 @@ interface AuthState {
   user: UserPublic | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  setUser: (user: UserPublic) => void;
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
@@ -16,6 +17,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+
+  setUser: (user: UserPublic): void => { set({ user }); },
 
   login: async (input: LoginInput): Promise<void> => {
     const user = await authApi.login(input);

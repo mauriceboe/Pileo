@@ -257,6 +257,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       <NavLink
                         key={board.id}
                         to={`/projects/${project.id}/boards/${board.id}`}
+                        end
                         className={({ isActive }) =>
                           `${styles.boardItem} ${isActive ? styles.boardItemActive : ''}`
                         }

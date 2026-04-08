@@ -19,6 +19,7 @@ export interface TaskWithRelations extends Task {
   checklistCompleted: number;
   attachmentCount: number;
   linkCount: number;
+  customBadges?: Array<{ fieldName: string; value: string }>;
 }
 
 export interface BoardTasks {
@@ -39,6 +40,19 @@ export async function createTask(
   const response = await apiClient.post<ApiSuccessResponse<TaskWithRelations>>(
     `/columns/${columnId}/tasks`,
     input,
+  );
+  return response.data;
+}
+
+export interface TaskContext {
+  taskId: string;
+  boardId: string;
+  projectId: string;
+}
+
+export async function getTaskContext(taskId: string): Promise<TaskContext> {
+  const response = await apiClient.get<ApiSuccessResponse<TaskContext>>(
+    `/tasks/${taskId}/context`,
   );
   return response.data;
 }

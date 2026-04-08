@@ -5,10 +5,10 @@ import { useNotificationStore } from '../stores/notification.store';
 import * as statsApi from '../api/stats.api';
 import type { UserTask } from '../api/stats.api';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow, isToday, isYesterday, isPast, format } from 'date-fns';
+import { isToday, isYesterday, isPast, format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 import {
   Bell, ListChecks, CheckCircle2, Inbox, Layers, Plus,
-  AtSign, UserPlus, MessageSquare, Settings, User, ChevronRight, Calendar,
+  AtSign, UserPlus, MessageSquare, Settings, ChevronRight, Calendar,
   LayoutDashboard, Star, Zap, Rocket, Target, Flag, Heart, Coffee, Sun,
   Moon, Cloud, Flame, Music, Camera, Gift, Award, Bookmark, Globe, Lightbulb,
   Code, Briefcase, Bug, Compass, Feather, Folder, Package, Puzzle,
@@ -16,8 +16,11 @@ import {
 } from 'lucide-react';
 import * as projectsApi from '../api/projects.api';
 import * as boardsApi from '../api/boards.api';
+import * as tasksApi from '../api/tasks.api';
+import { useBoardStore } from '../stores/board.store';
 import { SettingsDialog } from '../components/ui/SettingsDialog';
 import { ProfileDialog } from '../components/ui/ProfileDialog';
+import { Avatar } from '../components/ui/Avatar';
 import { Dialog } from '../components/ui/Dialog';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -60,6 +63,19 @@ const QUOTES = [
   '"Small progress is still progress."',
   '"Ship it, then iterate."',
 ];
+
+function timeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const mins = differenceInMinutes(now, date);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = differenceInHours(now, date);
+  if (hours < 24) return `${hours}h ago`;
+  const days = differenceInDays(now, date);
+  if (days < 7) return `${days}d ago`;
+  return format(date, 'MMM d');
+}
 
 function getQuote(): string { return QUOTES[new Date().getDate() % QUOTES.length]!; }
 function getTimeGreeting(): string {
@@ -167,19 +183,34 @@ export function DashboardPage() {
     comment: <MessageSquare size={16} />,
   };
 
+  const handleNotifClick = async (n: any) => {
+    if (!n.isRead) markRead(n.id);
+    if (n.resourceType === 'task') {
+      try {
+        const context = await tasksApi.getTaskContext(n.resourceId);
+        navigate(`/projects/${context.projectId}/boards/${context.boardId}`);
+        setTimeout(() => {
+          useBoardStore.getState().openTaskDetail(context.taskId);
+        }, 300);
+      } catch {
+        navigate('/');
+      }
+    }
+  };
+
   const renderNotifGroup = (title: string, items: any[]) => {
     if (items.length === 0) return null;
     return (
       <div className={styles.notifGroup}>
         <span className={styles.notifGroupTitle}>{title}</span>
         {items.map((n: any) => (
-          <button key={n.id} className={`${styles.notifCard} ${!n.isRead ? styles.notifUnread : ''}`} onClick={() => markRead(n.id)}>
+          <button key={n.id} className={`${styles.notifCard} ${!n.isRead ? styles.notifUnread : ''}`} onClick={() => handleNotifClick(n)}>
             <div className={`${styles.notifIcon} ${notifIconClass[n.type] ?? ''}`}>
               {notifIcons[n.type] ?? <Bell size={16} />}
             </div>
             <div className={styles.notifBody}>
               <span className={styles.notifTime}>
-                {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                {timeAgo(n.createdAt)}
               </span>
               <span className={styles.notifTitle}>
                 <span className={styles.notifTitleBold}>{n.title}</span>
@@ -194,13 +225,20 @@ export function DashboardPage() {
     );
   };
 
+  const handleTaskClick = (task: UserTask) => {
+    navigate(`/projects/${task.projectId}/boards/${task.boardId}`);
+    setTimeout(() => {
+      useBoardStore.getState().openTaskDetail(task.id);
+    }, 300);
+  };
+
   const renderTaskItem = (task: UserTask) => {
     const isOverdue = task.dueDate && !task.completedAt && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate));
     return (
       <button
         key={task.id}
         className={`${styles.notifCard} ${task.completedAt ? styles.taskCompleted : ''}`}
-        onClick={() => navigate(`/projects/${task.projectId}/boards/${task.boardId}`)}
+        onClick={() => handleTaskClick(task)}
       >
         <div className={styles.notifIcon} style={{ background: task.columnColor, boxShadow: `0 2px 8px ${task.columnColor}44` }}>
           {task.completedAt ? <CheckCircle2 size={16} /> : <ListChecks size={16} />}
@@ -302,7 +340,9 @@ export function DashboardPage() {
           <span className={styles.topLogo}>Pileo <span className={styles.alphaBadge}>Alpha</span></span>
           <div className={styles.topRight}>
             <button className={styles.topBtn} onClick={() => setSettingsOpen(true)}><Settings size={18} /></button>
-            <button className={styles.topAvatarBtn} onClick={() => setProfileOpen(true)}><User size={16} /></button>
+            <button className={styles.topAvatarBtn} onClick={() => setProfileOpen(true)}>
+              <Avatar name={user?.displayName ?? 'User'} src={user?.avatarPath} size="sm" />
+            </button>
           </div>
         </div>
 

@@ -54,12 +54,26 @@ export function SharedBoardPage() {
   const { token } = useParams<{ token: string }>();
   const [data, setData] = useState<SharedBoardData | null>(null);
   const [error, setError] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0);
 
   const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!token) return;
     shareApi.getSharedBoard(token).then(setData).catch(() => setError(true));
+  }, [token]);
+
+  // SSE live viewer count
+  useEffect(() => {
+    if (!token) return;
+    const es = new EventSource(`/api/v1/shared/${token}/viewers`);
+    es.onmessage = (event) => {
+      try {
+        const { count } = JSON.parse(event.data);
+        setViewerCount(count);
+      } catch {}
+    };
+    return () => es.close();
   }, [token]);
 
   // Horizontal scroll with mouse wheel (unless hovering a scrollable task area)
@@ -72,11 +86,7 @@ export function SharedBoardPage() {
       const target = e.target as HTMLElement | null;
       const taskArea = target?.closest(`.${styles.taskArea}`) as HTMLElement | null;
       if (taskArea && taskArea.scrollHeight > taskArea.clientHeight) {
-        const atTop = taskArea.scrollTop === 0;
-        const atBottom = Math.abs(taskArea.scrollTop + taskArea.clientHeight - taskArea.scrollHeight) < 1;
-        if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) {
-          return;
-        }
+        return;
       }
 
       e.preventDefault();
@@ -115,6 +125,13 @@ export function SharedBoardPage() {
         <span className={styles.divider} />
         <span className={styles.boardName}>{data.board.name}</span>
         <span className={styles.badge}>View only</span>
+        <span className={styles.spacer} />
+        {viewerCount > 0 && (
+          <span className={styles.viewers}>
+            <Eye size={14} />
+            <span>{viewerCount}</span>
+          </span>
+        )}
       </div>
       <div ref={boardRef} className={styles.board}>
         {sortedColumns.map((col) => {

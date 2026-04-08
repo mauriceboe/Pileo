@@ -43,7 +43,11 @@ export function useWebSocket(boardId: string | undefined): void {
         return;
       }
 
-      const { event, payload } = msg;
+      const { event, payload, boardId: msgBoardId } = msg;
+
+      // Ignore events from other boards (stale connections, race conditions)
+      const currentBoardId = boardIdRef.current;
+      if (msgBoardId && currentBoardId && msgBoardId !== currentBoardId) return;
 
       switch (event as WebSocketEventName | 'presence:list' | 'error') {
         case WEBSOCKET_EVENTS.TASK_CREATED: {
@@ -231,7 +235,8 @@ export function useWebSocket(boardId: string | undefined): void {
   );
 
   const connect = useCallback(() => {
-    if (!boardId) return;
+    const currentBoard = boardIdRef.current;
+    if (!currentBoard) return;
 
     // Build WS URL from current location
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -245,10 +250,13 @@ export function useWebSocket(boardId: string | undefined): void {
       reconnectAttemptRef.current = 0;
       setConnected(true);
 
-      // Join the board room
-      ws.send(
-        JSON.stringify({ action: 'board:join', payload: { boardId } }),
-      );
+      // Join the board room using the ref (not stale closure)
+      const boardToJoin = boardIdRef.current;
+      if (boardToJoin) {
+        ws.send(
+          JSON.stringify({ action: 'board:join', payload: { boardId: boardToJoin } }),
+        );
+      }
     };
 
     ws.onmessage = (event) => {
@@ -270,7 +278,7 @@ export function useWebSocket(boardId: string | undefined): void {
     ws.onerror = () => {
       // onclose will fire after onerror, triggering reconnect
     };
-  }, [boardId, handleMessage, setConnected]);
+  }, [handleMessage, setConnected]);
 
   const scheduleReconnect = useCallback(() => {
     if (reconnectTimerRef.current) return;

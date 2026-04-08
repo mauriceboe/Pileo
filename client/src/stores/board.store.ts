@@ -56,7 +56,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   setBoard: (board: any): void => { set({ board }); },
 
   fetchBoard: async (boardId: string): Promise<void> => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, tasksByColumn: {} });
     try {
       const board = await boardsApi.getBoard(boardId);
       set({ board, isLoading: false });
@@ -279,6 +279,26 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   closeTaskDetail: (): void => {
+    const { selectedTask, selectedTaskId } = get();
+
+    // Auto-delete empty tasks (created via + button with default "Untitled" title)
+    if (selectedTask && selectedTaskId) {
+      const title = (selectedTask.title ?? '').trim();
+      const desc = (selectedTask.description ?? '').trim();
+      const isEmpty = (title === '' || title === 'Untitled')
+        && desc === ''
+        && (selectedTask.assignees?.length ?? 0) === 0
+        && (selectedTask.labels?.length ?? 0) === 0
+        && (selectedTask.commentCount ?? 0) === 0
+        && (selectedTask.checklistTotal ?? 0) === 0
+        && (selectedTask.attachmentCount ?? 0) === 0;
+
+      if (isEmpty) {
+        // Delete silently in background
+        get().deleteTask(selectedTaskId);
+      }
+    }
+
     set({ isTaskDetailOpen: false, selectedTaskId: null, selectedTask: null });
     // Broadcast unfocus
     import('./websocket.store').then(({ useWebSocketStore }) => {
