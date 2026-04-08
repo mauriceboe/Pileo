@@ -1,0 +1,22 @@
+[data-theme='light'] {
+  --color-primary: #18181B;
+  --color-primary-hover: #09090B;
+  --color-primary-light: #F4F4F5;
+  --color-primary-subtle: rgba(24, 24, 27, 0.04);
+  --color-secondary: #64748B;
+  --color-secondary-hover: #475569;
+
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #F8FAFC;
+  --color-surface-hover: #F1F5F9;
+  --color-background: #F4F5F7;
+  --color-background-alt: #EBEDF0;
+
+  --color-text: #18181B;
+  --color-text-secondary: #52525B;
+  --color-text-muted: #A1A1AA;
+  --color-text-inverse: #FFFFFF;
+
+  --color-border: #E4E4E7;
+  --color-border-light: #F4F4F5;
+}

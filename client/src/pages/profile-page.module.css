@@ -1,0 +1,214 @@
+.page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-xl) var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ─── Banner ─── */
+
+.banner {
+  width: calc(100% + 2 * var(--spacing-xl));
+  height: 160px;
+  margin-left: calc(-1 * var(--spacing-xl));
+  margin-right: calc(-1 * var(--spacing-xl));
+  background: linear-gradient(135deg, var(--color-primary) 0%, #6366F1 50%, #EC4899 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.bannerPattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 60% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+}
+
+/* ─── Avatar ─── */
+
+.avatarWrapper {
+  margin-top: -36px;
+  border-radius: var(--radius-full);
+  padding: 4px;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Identity ─── */
+
+.identity {
+  text-align: center;
+  margin-top: var(--spacing-base);
+}
+
+.displayName {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.username {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 4px 0 0;
+}
+
+/* ─── Stats row ─── */
+
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-base);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-base) var(--spacing-xl);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-xs);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statIcon {
+  color: var(--color-text-muted);
+}
+
+.statValue {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.statLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.statDivider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--color-border);
+}
+
+/* ─── Actions ─── */
+
+.actions {
+  margin-top: var(--spacing-lg);
+}
+
+/* ─── Details card ─── */
+
+.card {
+  width: 100%;
+  margin-top: var(--spacing-2xl);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+.cardTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding: var(--spacing-base) 20px;
+  border-bottom: 1px solid var(--color-border-light);
+  background-color: var(--color-surface-raised);
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+}
+
+.detailRow + .detailRow {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.detailIcon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.detailLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  min-width: 120px;
+}
+
+.detailValue {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ─── Danger zone ─── */
+
+.dangerZone {
+  width: 100%;
+  margin-top: var(--spacing-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-base) var(--spacing-lg);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error-light);
+  border-radius: var(--radius-lg);
+  gap: var(--spacing-base);
+}
+
+.dangerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.dangerTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.dangerHint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 2px 0 0;
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 500px) {
+  .statsRow {
+    flex-wrap: wrap;
+    border-radius: var(--radius-lg);
+    justify-content: center;
+  }
+
+  .statDivider {
+    display: none;
+  }
+
+  .dangerZone {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

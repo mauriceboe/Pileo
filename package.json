@@ -1,0 +1,16 @@
+{
+  "name": "pileo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @pileo/shared"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

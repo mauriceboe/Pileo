@@ -1,0 +1,241 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Progress ─── */
+
+.progressSection {
+  margin-bottom: 4px;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.progressText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.progressDone {
+  color: #22C55E;
+}
+
+.progressPercent {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.progressTrack {
+  height: 5px;
+  background-color: var(--color-border-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #22C55E, #16A34A);
+  border-radius: 10px;
+  transition: width 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressFillDone {
+  background: linear-gradient(90deg, #22C55E, #16A34A);
+}
+
+/* ─── Item list ─── */
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: grab;
+  transition: background-color 120ms ease;
+}
+
+.item:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.itemCompleted {
+  opacity: 0.65;
+}
+
+/* ─── Drag handle ─── */
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  flex-shrink: 0;
+}
+
+.item:hover .dragHandle {
+  opacity: 0.5;
+}
+
+/* ─── Custom rounded checkbox ─── */
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.checkbox:hover {
+  border-color: var(--color-text);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.checkboxChecked {
+  background-color: #22C55E;
+  border-color: #22C55E;
+  color: #FFFFFF;
+}
+
+.checkboxChecked:hover {
+  background-color: #16A34A;
+  border-color: #16A34A;
+}
+
+/* ─── Item title ─── */
+
+.itemTitle {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+  padding: 2px 0;
+  transition: color 200ms ease, text-decoration 200ms ease;
+}
+
+.itemCompleted .itemTitle {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* ─── Delete ─── */
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 120ms ease;
+  flex-shrink: 0;
+}
+
+.item:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  color: #EF4444;
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+/* ─── Add form ─── */
+
+.addForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.addInput {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.addInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 64, 255, 0.08);
+}
+
+.addInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-family);
+  transition: all 120ms ease;
+}
+
+.addButton:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: rgba(26, 64, 255, 0.03);
+}
+
+/* ─── Edit input ─── */
+
+.editInput {
+  flex: 1;
+  padding: 3px 8px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 64, 255, 0.08);
+}

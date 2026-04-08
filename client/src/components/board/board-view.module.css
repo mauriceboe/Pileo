@@ -1,0 +1,50 @@
+/* Board container — light gray background like MeisterTask */
+.container {
+  position: relative;
+  display: flex;
+  gap: 0;
+  padding: 0;
+  overflow-x: auto;
+  min-height: calc(100vh - var(--topbar-height));
+  align-items: stretch;
+  background-color: #F4F5F7;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+[data-theme='dark'] .container {
+  background-color: var(--color-background);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--spacing-3xl);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-base);
+  width: 100%;
+  padding: var(--spacing-3xl);
+  color: var(--color-error);
+}
+
+.errorMessage {
+  font-size: var(--font-size-base);
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .container {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 0;
+  }
+}

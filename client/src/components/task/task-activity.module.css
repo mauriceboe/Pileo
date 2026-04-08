@@ -1,0 +1,82 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.entry {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  position: relative;
+}
+
+.entry::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 32px;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--color-border-light);
+}
+
+.entry:last-child::before {
+  display: none;
+}
+
+.entryAvatar {
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.entryContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.entryText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.entryUser {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.entryAction {
+  color: var(--color-text-secondary);
+}
+
+.entryDetail {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.entryTimestamp {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-xxs, 2px);
+}
+
+.emptyMessage {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--spacing-md) 0;
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-sm) 0;
+}

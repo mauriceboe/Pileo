@@ -1,0 +1,169 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-height);
+  padding: 0 20px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-muted);
+  transition: all 120ms ease;
+}
+
+.menuButton:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.appName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Unified icon button — same size, color, radius for all */
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-muted);
+  transition: all 120ms ease;
+}
+
+.iconButton:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.avatarButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-full);
+  background-color: var(--color-text);
+  color: var(--color-text-inverse);
+  transition: all 120ms ease;
+  margin-left: 6px;
+}
+
+.avatarButton:hover {
+  opacity: 0.8;
+}
+
+/* Project / Board name */
+.projectName { font-size: 13px; font-weight: 500; color: var(--color-text-muted); }
+.separator { color: var(--color-border); font-size: 13px; margin: 0 2px; }
+
+.boardNameBtn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 14px; font-weight: 600; color: var(--color-text);
+  background: none; border: none; cursor: pointer;
+  padding: 2px 6px; border-radius: 6px;
+  transition: background 120ms ease;
+}
+.boardNameBtn:hover { background: var(--color-surface-hover); }
+.boardNameIcon { opacity: 0; color: var(--color-text-muted); transition: opacity 120ms ease; }
+.boardNameBtn:hover .boardNameIcon { opacity: 1; }
+
+.boardNameInput {
+  font-size: 14px; font-weight: 600; color: var(--color-text);
+  background: var(--color-surface-hover); border: 1px solid var(--color-border);
+  border-radius: 6px; padding: 2px 8px; outline: none;
+  font-family: var(--font-family); min-width: 120px;
+}
+.boardNameInput:focus { border-color: var(--color-text); }
+
+.boardDeleteBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: none; border-radius: 6px;
+  background: transparent; color: var(--color-text-muted); cursor: pointer;
+  opacity: 0; transition: all 120ms ease;
+}
+.left:hover .boardDeleteBtn { opacity: 1; }
+.boardDeleteBtn:hover { color: #EF4444; background: rgba(239,68,68,0.08); }
+
+@media (min-width: 1025px) {
+  .menuButton { display: none; }
+}
+
+/* Tooltip */
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  z-index: 50;
+}
+
+.tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-bottom-color: var(--color-text);
+}
+
+.tooltipWrapper:hover .tooltip { opacity: 1; }
+
+@media (max-width: 767px) {
+  .topBar { padding: 0 10px; }
+  .tooltip { display: none; }
+  .projectName { display: none; }
+  .separator { display: none; }
+  .boardDeleteBtn { display: none; }
+  .boardNameIcon { display: none; }
+  .left { gap: 6px; }
+  .right { gap: 0; }
+  .iconButton { width: 36px; height: 36px; }
+  .avatarButton { width: 32px; height: 32px; margin-left: 4px; }
+  .hideOnMobile { display: none; }
+}

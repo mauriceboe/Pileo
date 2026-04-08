@@ -1,0 +1,63 @@
+.container {
+  position: relative;
+}
+
+.display {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family);
+  cursor: pointer;
+  width: 100%;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.display:hover {
+  border-color: var(--color-border);
+  background-color: var(--color-background);
+}
+
+.overdue {
+  color: var(--color-error);
+}
+
+.dueToday {
+  color: var(--color-warning);
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.dateInput {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.clearButton {
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.clearButton:hover {
+  color: var(--color-error);
+}

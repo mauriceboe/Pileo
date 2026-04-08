@@ -1,0 +1,239 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dropZone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dropZone:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-background);
+}
+
+.dropZoneActive {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light, rgba(74, 144, 217, 0.08));
+}
+
+.dropZoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.dropZoneIcon {
+  color: var(--color-text-muted);
+}
+
+.dropZoneText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.dropZoneLink {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  transition: background-color var(--transition-fast);
+}
+
+.fileItem:hover {
+  background-color: var(--color-background);
+}
+
+.fileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-background);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.fileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileMeta {
+  display: flex;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.fileActions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.fileActionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxs, 2px);
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.fileActionButton:hover {
+  color: var(--color-primary);
+}
+
+.fileActionButtonDanger:hover {
+  color: var(--color-danger);
+}
+
+.uploadProgress {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  padding: var(--spacing-xs) 0;
+}
+
+.emptyMessage {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--spacing-sm) 0;
+}
+
+/* Link icon color */
+.linkIcon {
+  background-color: #EEF2FF;
+  color: #4338CA;
+}
+
+[data-theme='dark'] .linkIcon {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+}
+
+/* Add link button */
+.addLinkBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.addLinkBtn:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+/* Link form */
+.linkForm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+}
+
+.linkInput {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.linkInput:focus {
+  border-color: var(--color-text);
+}
+
+.linkFormActions {
+  display: flex;
+  gap: 6px;
+}
+
+.linkFormBtn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.linkFormBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.linkFormBtnGhost {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.linkFormBtnGhost:hover {
+  color: var(--color-text);
+}

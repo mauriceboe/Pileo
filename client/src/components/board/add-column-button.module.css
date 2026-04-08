@@ -1,0 +1,68 @@
+/* Add column — matches the column width, minimal style */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 320px;
+  width: 320px;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.04);
+  color: #9CA3AF;
+  font-size: 13px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.addButton:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #6B7280;
+}
+
+[data-theme='dark'] .addButton {
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748B;
+}
+
+[data-theme='dark'] .addButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: #FFFFFF;
+  border-right: 1px solid #EBEDF0;
+}
+
+[data-theme='dark'] .inlineForm {
+  background-color: var(--color-surface);
+  border-right-color: var(--color-border);
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1F2937;
+  margin-bottom: 4px;
+}
+
+.formActions {
+  display: flex;
+  gap: 6px;
+}
