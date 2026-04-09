@@ -37,6 +37,7 @@
 .bannerPill:first-child { border-radius: 6px 6px 0 0; }
 
 .bannerCompleted { background: #22C55E; color: #FFF; }
+.bannerRejected { background: #9CA3AF; color: #FFF; }
 .bannerOverdue { background: #F97316; color: #FFF; }
 .bannerDueToday { background: #F59E0B; color: #FFF; }
 .bannerPrioLow { background: #3B82F6; color: #FFF; }

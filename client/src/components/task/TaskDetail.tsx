@@ -12,6 +12,7 @@ import {
   Clock,
   AlignLeft,
   CheckCircle2,
+  XCircle as XCircle2,
   Link,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -94,6 +95,7 @@ export function TaskDetail() {
   };
 
   const isCompleted = selectedTask?.completedAt !== null && selectedTask?.completedAt !== undefined;
+  const isRejected = (selectedTask as any)?.rejectedAt !== null && (selectedTask as any)?.rejectedAt !== undefined;
 
   return (
     <div className={styles.overlay}>
@@ -288,6 +290,21 @@ export function TaskDetail() {
                 >
                   <CheckCircle2 size={16} />
                   {isCompleted ? 'Completed' : 'Mark Complete'}
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.rejectButton} ${isRejected ? styles.rejectedButton : ''}`}
+                  onClick={() => {
+                    if (isRejected) {
+                      updateTask(selectedTask.id, { rejectedAt: null } as any);
+                    } else {
+                      updateTask(selectedTask.id, { rejectedAt: new Date() } as any);
+                    }
+                  }}
+                >
+                  <XCircle2 size={16} />
+                  {isRejected ? 'Rejected' : 'Reject'}
                 </button>
               </div>
             </div>

@@ -226,5 +226,10 @@ export function initializeDatabase(): void {
     sqlite.exec('ALTER TABLE projects ADD COLUMN icon TEXT');
   }
 
+  const taskColumns = sqlite.pragma('table_info(tasks)') as Array<{ name: string }>;
+  if (!taskColumns.some((col) => col.name === 'rejected_at')) {
+    sqlite.exec('ALTER TABLE tasks ADD COLUMN rejected_at TEXT');
+  }
+
   logger.info('Database tables initialized');
 }

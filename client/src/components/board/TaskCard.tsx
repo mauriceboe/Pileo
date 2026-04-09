@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { isPast, isToday, format } from 'date-fns';
-import { Calendar, MessageSquare, CheckSquare, Paperclip, Link, Pencil, Trash2, CheckCircle } from 'lucide-react';
+import { Calendar, MessageSquare, CheckSquare, Paperclip, Link, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import type { TaskWithRelations } from '../../api/tasks.api';
 import { useBoardStore } from '../../stores/board.store';
 import { useWebSocketStore } from '../../stores/websocket.store';
@@ -65,6 +65,7 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
   const isDueToday = parsedDueDate && isToday(parsedDueDate);
   const hasPriority = task.priority && task.priority !== 'none';
   const taskCompleted = !!task.completedAt;
+  const taskRejected = !!(task as any).rejectedAt;
 
   const cardClassName = [
     styles.card,
@@ -85,13 +86,16 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
   if (taskCompleted) {
     banners.push({ text: 'Completed', className: styles.bannerCompleted! });
   }
-  if (isOverdue && !taskCompleted) {
+  if (taskRejected && !taskCompleted) {
+    banners.push({ text: 'Rejected', className: styles.bannerRejected! });
+  }
+  if (isOverdue && !taskCompleted && !taskRejected) {
     banners.push({ text: 'Overdue', className: styles.bannerOverdue! });
   }
-  if (isDueToday && !isOverdue && !taskCompleted) {
+  if (isDueToday && !isOverdue && !taskCompleted && !taskRejected) {
     banners.push({ text: 'Due today', className: styles.bannerDueToday! });
   }
-  if (hasPriority && !taskCompleted) {
+  if (hasPriority && !taskCompleted && !taskRejected) {
     const labels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
     const cls: Record<string, string> = { low: styles.bannerPrioLow ?? '', medium: styles.bannerPrioMedium ?? '', high: styles.bannerPrioHigh ?? '', urgent: styles.bannerPrioUrgent ?? '' };
     banners.push({ text: labels[task.priority] ?? '', className: cls[task.priority] ?? '' });
@@ -130,6 +134,13 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
               onClick: () => updateTask(task.id, {
                 completedAt: taskCompleted ? null : new Date(),
               }),
+            },
+            {
+              label: taskRejected ? 'Undo rejected' : 'Mark rejected',
+              icon: <XCircle size={14} />,
+              onClick: () => updateTask(task.id, {
+                rejectedAt: taskRejected ? null : new Date(),
+              } as any),
             },
             'divider',
             {

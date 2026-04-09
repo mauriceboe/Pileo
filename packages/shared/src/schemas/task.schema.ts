@@ -12,6 +12,7 @@ export const taskSchema = z.object({
   priority: taskPrioritySchema,
   dueDate: z.string().nullable(),
   completedAt: z.string().nullable(),
+  rejectedAt: z.string().nullable(),
   creatorId: z.string().uuid(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -34,6 +35,7 @@ export const updateTaskSchema = z.object({
   priority: taskPrioritySchema.optional(),
   dueDate: z.coerce.date().nullable().optional(),
   completedAt: z.coerce.date().nullable().optional(),
+  rejectedAt: z.coerce.date().nullable().optional(),
 });
 
 export const moveTaskSchema = z.object({

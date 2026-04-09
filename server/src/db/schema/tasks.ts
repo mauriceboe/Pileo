@@ -12,6 +12,7 @@ export const tasks = sqliteTable('tasks', {
   priority: text('priority', { enum: ['none', 'low', 'medium', 'high', 'urgent'] }).notNull().default('none'),
   dueDate: text('due_date'),
   completedAt: text('completed_at'),
+  rejectedAt: text('rejected_at'),
   creatorId: text('creator_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),

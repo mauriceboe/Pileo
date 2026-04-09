@@ -260,6 +260,42 @@
   border-color: #16A34A;
 }
 
+/* Reject button — mirrors completeButton style */
+.rejectButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: 1.5px dashed var(--color-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: 8px;
+}
+
+.rejectButton:hover {
+  border-color: #9CA3AF;
+  color: #6B7280;
+  background-color: rgba(156, 163, 175, 0.05);
+}
+
+.rejectedButton {
+  background-color: #9CA3AF;
+  color: #FFFFFF;
+  border: 1.5px solid #9CA3AF;
+}
+
+.rejectedButton:hover {
+  background-color: #6B7280;
+  border-color: #6B7280;
+}
+
 /* ─── Footer ─── */
 
 .footer {

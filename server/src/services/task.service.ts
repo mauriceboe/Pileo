@@ -418,6 +418,9 @@ export async function update(
   if ((data as any).completedAt !== undefined) {
     setData.completedAt = (data as any).completedAt?.toISOString?.() ?? (data as any).completedAt ?? null;
   }
+  if ((data as any).rejectedAt !== undefined) {
+    setData.rejectedAt = (data as any).rejectedAt?.toISOString?.() ?? (data as any).rejectedAt ?? null;
+  }
 
   const updated = await db
     .update(tasks)
