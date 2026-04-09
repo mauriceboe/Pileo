@@ -18,7 +18,7 @@ export function TaskAssignees({ taskId, assignees }: TaskAssigneesProps) {
   const updateTaskAssignees = useBoardStore((state) => state.updateTaskAssignees);
   const projectMembers = useProjectStore((state) => state.members);
 
-  const assignedIds = new Set(assignees.map((assignee) => assignee.id));
+  const assignedIds = new Set(assignees.map((assignee) => (assignee as any).userId ?? assignee.id));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,10 +52,11 @@ export function TaskAssignees({ taskId, assignees }: TaskAssigneesProps) {
               <button
                 type="button"
                 className={styles.removeButton}
-                onClick={() => handleToggleMember(assignee.id)}
+                onClick={() => handleToggleMember((assignee as any).userId ?? assignee.id)}
               >
                 <X size={10} />
               </button>
+
             </div>
           ))}
         </div>
