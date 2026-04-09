@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, X } from 'lucide-react';
 import type { UserPublic } from '@pileo/shared';
 import { useBoardStore } from '../../stores/board.store';
 import { useProjectStore } from '../../stores/project.store';
@@ -49,6 +49,13 @@ export function TaskAssignees({ taskId, assignees }: TaskAssigneesProps) {
             <div key={(assignee as any).userId ?? assignee.id} className={styles.assigneeChip}>
               <Avatar name={assignee.displayName} src={assignee.avatarPath} size="sm" />
               <span>{assignee.displayName}</span>
+              <button
+                type="button"
+                className={styles.removeButton}
+                onClick={() => handleToggleMember(assignee.id)}
+              >
+                <X size={10} />
+              </button>
             </div>
           ))}
         </div>
