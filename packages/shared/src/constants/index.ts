@@ -81,6 +81,7 @@ export const ALLOWED_DOCUMENT_EXTENSIONS = [
   "csv",
 ] as const;
 export const ALLOWED_ARCHIVE_EXTENSIONS = ["zip", "tar.gz"] as const;
+export const ALLOWED_3D_MODEL_EXTENSIONS = ["3mf", "stl", "obj", "step", "stp", "gcode"] as const;
 
 // -- Rate Limiting --
 export const RATE_LIMIT_GLOBAL_MAX = 800;

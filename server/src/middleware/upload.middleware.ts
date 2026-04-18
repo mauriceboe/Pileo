@@ -7,6 +7,7 @@ import {
   ALLOWED_IMAGE_EXTENSIONS,
   ALLOWED_DOCUMENT_EXTENSIONS,
   ALLOWED_ARCHIVE_EXTENSIONS,
+  ALLOWED_3D_MODEL_EXTENSIONS,
 } from '@pileo/shared';
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -27,12 +28,36 @@ const ALLOWED_MIME_TYPES = new Set([
   'text/csv',
   'application/zip',
   'application/gzip',
+  // 3D model formats — browsers usually send these as octet-stream because
+  // there is no widely registered MIME, so we also accept binary fallbacks below.
+  'model/3mf',
+  'application/vnd.ms-package.3dmanufacturing-3dmodel+xml',
+  'model/stl',
+  'application/sla',
+  'application/vnd.ms-pki.stl',
+  'model/obj',
+  'application/x-tgif',
+  'application/step',
+  'model/step',
+  'text/x-gcode',
 ]);
 
 const ALLOWED_EXTENSIONS: Set<string> = new Set([
   ...ALLOWED_IMAGE_EXTENSIONS,
   ...ALLOWED_DOCUMENT_EXTENSIONS,
   ...ALLOWED_ARCHIVE_EXTENSIONS,
+  ...ALLOWED_3D_MODEL_EXTENSIONS,
+]);
+
+// Extensions where we accept generic binary MIME types (application/octet-stream)
+// because browsers rarely have a registered type for them.
+const BINARY_FALLBACK_EXTENSIONS: Set<string> = new Set([
+  ...ALLOWED_3D_MODEL_EXTENSIONS,
+]);
+
+const BINARY_FALLBACK_MIME_TYPES = new Set([
+  'application/octet-stream',
+  'binary/octet-stream',
 ]);
 
 const storage = multer.diskStorage({
@@ -53,7 +78,16 @@ function fileFilter(
 ): void {
   const extension = path.extname(file.originalname).toLowerCase().slice(1);
 
-  if (!ALLOWED_MIME_TYPES.has(file.mimetype) || !ALLOWED_EXTENSIONS.has(extension)) {
+  if (!ALLOWED_EXTENSIONS.has(extension)) {
+    callback(new ValidationError('File type not allowed'));
+    return;
+  }
+
+  const mimeAllowed =
+    ALLOWED_MIME_TYPES.has(file.mimetype) ||
+    (BINARY_FALLBACK_EXTENSIONS.has(extension) && BINARY_FALLBACK_MIME_TYPES.has(file.mimetype));
+
+  if (!mimeAllowed) {
     callback(new ValidationError('File type not allowed'));
     return;
   }
