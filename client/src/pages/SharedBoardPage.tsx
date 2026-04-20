@@ -41,6 +41,7 @@ interface SharedTask {
   priority: string;
   dueDate: string | null;
   completedAt: string | null;
+  rejectedAt: string | null;
   labels: Array<{ name: string; color: string }>;
 }
 
@@ -155,14 +156,17 @@ export function SharedBoardPage() {
               <div className={styles.taskArea}>
                 {tasks.map((task) => {
                   const completed = !!task.completedAt;
+                  const rejected = !!task.rejectedAt;
+                  const inactive = completed || rejected;
                   const parsed = task.dueDate ? new Date(task.dueDate) : null;
                   const now = new Date();
-                  const isOverdue = parsed && !completed && parsed < new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                  const isDueToday = parsed && !completed && parsed.toDateString() === now.toDateString();
-                  const hasPrio = task.priority && task.priority !== 'none' && !completed;
+                  const isOverdue = parsed && !inactive && parsed < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                  const isDueToday = parsed && !inactive && parsed.toDateString() === now.toDateString();
+                  const hasPrio = task.priority && task.priority !== 'none' && !inactive;
 
                   const banners: Array<{ text: string; cls: string }> = [];
                   if (completed) banners.push({ text: 'Completed', cls: styles.bannerCompleted! });
+                  if (rejected && !completed) banners.push({ text: 'Rejected', cls: styles.bannerRejected! });
                   if (isOverdue) banners.push({ text: 'Overdue', cls: styles.bannerOverdue! });
                   if (isDueToday && !isOverdue) banners.push({ text: 'Due today', cls: styles.bannerDueToday! });
                   if (hasPrio) {

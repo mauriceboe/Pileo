@@ -136,7 +136,7 @@ export async function getSharedBoardData(
 
   const columnIds = boardColumns.map((c) => c.id);
 
-  let tasksByColumn: Record<string, Array<{ id: string; title: string; description: string | null; position: number; priority: string; dueDate: string | null; completedAt: string | null; labels: Array<{ name: string; color: string }> }>> = {};
+  let tasksByColumn: Record<string, Array<{ id: string; title: string; description: string | null; position: number; priority: string; dueDate: string | null; completedAt: string | null; rejectedAt: string | null; labels: Array<{ name: string; color: string }> }>> = {};
   for (const colId of columnIds) {
     tasksByColumn[colId] = [];
   }
@@ -152,6 +152,7 @@ export async function getSharedBoardData(
         priority: tasks.priority,
         dueDate: tasks.dueDate,
         completedAt: tasks.completedAt,
+        rejectedAt: tasks.rejectedAt,
       })
       .from(tasks)
       .where(inArray(tasks.columnId, columnIds))
@@ -188,6 +189,7 @@ export async function getSharedBoardData(
         priority: task.priority,
         dueDate: task.dueDate,
         completedAt: task.completedAt,
+        rejectedAt: task.rejectedAt,
         labels: labelsByTask.get(task.id) ?? [],
       });
     }
