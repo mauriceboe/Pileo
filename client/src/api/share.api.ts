@@ -15,7 +15,7 @@ interface SharedBoardData {
     icon: string | null;
     position: number;
   }>;
-  tasksByColumn: Record<string, Array<{ id: string; title: string; description: string | null; position: number; priority: string; dueDate: string | null; completedAt: string | null; labels: Array<{ name: string; color: string }> }>>;
+  tasksByColumn: Record<string, Array<{ id: string; title: string; description: string | null; position: number; priority: string; dueDate: string | null; completedAt: string | null; rejectedAt: string | null; labels: Array<{ name: string; color: string }> }>>;
 }
 
 export async function createShareLink(boardId: string): Promise<string> {
