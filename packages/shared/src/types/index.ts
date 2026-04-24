@@ -28,6 +28,7 @@ import {
   createTaskSchema,
   updateTaskSchema,
   moveTaskSchema,
+  bulkTaskOperationSchema,
   updateTaskAssigneesSchema,
   updateTaskLabelsSchema,
   taskAssigneeSchema,
@@ -95,6 +96,7 @@ export type Task = z.infer<typeof taskSchema>;
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 export type MoveTaskInput = z.infer<typeof moveTaskSchema>;
+export type BulkTaskOperationInput = z.infer<typeof bulkTaskOperationSchema>;
 export type UpdateTaskAssigneesInput = z.infer<typeof updateTaskAssigneesSchema>;
 export type UpdateTaskLabelsInput = z.infer<typeof updateTaskLabelsSchema>;
 export type TaskAssignee = z.infer<typeof taskAssigneeSchema>;

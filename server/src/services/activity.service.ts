@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, gte } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { activityLog, tasks, columns, boards, users } from '../db/schema/index.js';
 import { logger } from '../config/logger.js';
@@ -12,6 +12,35 @@ interface ActivityEntryWithUser extends ActivityLogRow {
   userAvatarPath: string | null;
 }
 
+const COALESCE_WINDOW_MS = 15 * 60 * 1000;
+
+// Merge two change records: preserve earlier oldValue and take latest newValue per field.
+function mergeChanges(
+  earlier: Record<string, unknown>,
+  later: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...earlier };
+  for (const [key, value] of Object.entries(later)) {
+    const existing = merged[key];
+    if (
+      existing
+      && typeof existing === 'object'
+      && value
+      && typeof value === 'object'
+      && 'oldValue' in (existing as Record<string, unknown>)
+      && 'newValue' in (value as Record<string, unknown>)
+    ) {
+      merged[key] = {
+        oldValue: (existing as Record<string, unknown>).oldValue,
+        newValue: (value as Record<string, unknown>).newValue,
+      };
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 export async function log(
   projectId: string,
   taskId: string | null,
@@ -19,6 +48,45 @@ export async function log(
   action: string,
   details?: Record<string, unknown>,
 ): Promise<void> {
+  // Coalesce rapid-fire task.updated entries by the same user for the same task
+  // within a 15-minute window — merges details instead of spamming.
+  if (action === 'task.updated' && taskId && details) {
+    const windowStart = new Date(Date.now() - COALESCE_WINDOW_MS).toISOString();
+    const existingRows = await db
+      .select({ id: activityLog.id, details: activityLog.details })
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.taskId, taskId),
+          eq(activityLog.userId, userId),
+          eq(activityLog.action, action),
+          gte(activityLog.createdAt, windowStart),
+        ),
+      )
+      .orderBy(desc(activityLog.createdAt))
+      .limit(1);
+
+    const existing = existingRows[0];
+    if (existing) {
+      let existingDetails: Record<string, unknown> = {};
+      try {
+        existingDetails = existing.details ? JSON.parse(existing.details) as Record<string, unknown> : {};
+      } catch {
+        existingDetails = {};
+      }
+      const merged = mergeChanges(existingDetails, details);
+      await db
+        .update(activityLog)
+        .set({
+          details: JSON.stringify(merged),
+          createdAt: new Date().toISOString(),
+        })
+        .where(eq(activityLog.id, existing.id));
+      logger.info({ projectId, taskId, userId, action, coalesced: true }, 'Activity coalesced');
+      return;
+    }
+  }
+
   await db.insert(activityLog).values({
     projectId,
     taskId,

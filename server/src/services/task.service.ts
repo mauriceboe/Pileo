@@ -99,6 +99,14 @@ async function getEnrichedTask(taskId: string): Promise<Record<string, unknown>>
     throw new NotFoundError('Task', taskId);
   }
 
+  const projectRows = await db
+    .select({ projectId: boards.projectId })
+    .from(columns)
+    .innerJoin(boards, eq(columns.boardId, boards.id))
+    .where(eq(columns.id, task.columnId))
+    .limit(1);
+  const projectId = projectRows[0]?.projectId;
+
   const [assigneeRows, labelRows, checklistTotalRows, checklistCompletedRows, commentCountRows, attachmentCountRows, linkCountRows] = await Promise.all([
     db
       .select({
@@ -141,6 +149,23 @@ async function getEnrichedTask(taskId: string): Promise<Record<string, unknown>>
       .where(eq(taskLinks.taskId, taskId)),
   ]);
 
+  const customBadges: Array<{ fieldName: string; value: string }> = [];
+  if (projectId) {
+    const cardFields = customFieldService
+      .listFields(projectId)
+      .filter((f) => f.showOnCard && f.isEnabled);
+    if (cardFields.length > 0) {
+      const fieldMap = new Map(cardFields.map((f) => [f.id, f]));
+      const taskValues = customFieldService.getTaskValues(taskId);
+      for (const cv of taskValues) {
+        const field = fieldMap.get(cv.fieldId);
+        if (field && cv.value) {
+          customBadges.push({ fieldName: field.name, value: cv.value });
+        }
+      }
+    }
+  }
+
   return {
     ...task,
     assignees: assigneeRows,
@@ -150,6 +175,7 @@ async function getEnrichedTask(taskId: string): Promise<Record<string, unknown>>
     checklistCompleted: checklistCompletedRows[0]?.count ?? 0,
     attachmentCount: attachmentCountRows[0]?.count ?? 0,
     linkCount: linkCountRows[0]?.count ?? 0,
+    customBadges,
   };
 }
 
@@ -451,6 +477,20 @@ export async function update(
       changes.dueDate = { oldValue: oldDue, newValue: newDue };
     }
   }
+  if ((data as any).completedAt !== undefined) {
+    const oldCompleted = (old as any).completedAt ?? null;
+    const newCompleted = (data as any).completedAt ?? null;
+    if (!!oldCompleted !== !!newCompleted) {
+      changes.completedAt = { oldValue: oldCompleted, newValue: newCompleted };
+    }
+  }
+  if ((data as any).rejectedAt !== undefined) {
+    const oldRejected = (old as any).rejectedAt ?? null;
+    const newRejected = (data as any).rejectedAt ?? null;
+    if (!!oldRejected !== !!newRejected) {
+      changes.rejectedAt = { oldValue: oldRejected, newValue: newRejected };
+    }
+  }
 
   if (Object.keys(changes).length > 0) {
     await activityService.log(context.projectId, taskId, userId, 'task.updated', changes);
@@ -584,9 +624,24 @@ export async function updateAssignees(
     }
   }
 
+  const resolvedAdded = data.add.length > 0
+    ? await db.select({ id: users.id, displayName: users.displayName }).from(users).where(inArray(users.id, data.add))
+    : [];
+  const resolvedRemoved = data.remove.length > 0
+    ? await db.select({ id: users.id, displayName: users.displayName }).from(users).where(inArray(users.id, data.remove))
+    : [];
+
+  // Bump task.updatedAt so clients refetch activity/details via the shared signal
+  await db
+    .update(tasks)
+    .set({ updatedAt: new Date().toISOString() })
+    .where(eq(tasks.id, taskId));
+
   await activityService.log(context.projectId, taskId, userId, 'task.assignees.updated', {
     added: data.add,
     removed: data.remove,
+    addedNames: resolvedAdded.map((u) => u.displayName),
+    removedNames: resolvedRemoved.map((u) => u.displayName),
   });
 
   logger.info({ taskId, userId, added: data.add.length, removed: data.remove.length }, 'Task assignees updated');
@@ -651,9 +706,23 @@ export async function updateLabels(
       .onConflictDoNothing();
   }
 
+  const resolvedAddedLabels = data.add.length > 0
+    ? await db.select({ id: labels.id, name: labels.name, color: labels.color }).from(labels).where(inArray(labels.id, data.add))
+    : [];
+  const resolvedRemovedLabels = data.remove.length > 0
+    ? await db.select({ id: labels.id, name: labels.name, color: labels.color }).from(labels).where(inArray(labels.id, data.remove))
+    : [];
+
+  await db
+    .update(tasks)
+    .set({ updatedAt: new Date().toISOString() })
+    .where(eq(tasks.id, taskId));
+
   await activityService.log(context.projectId, taskId, userId, 'task.labels.updated', {
     added: data.add,
     removed: data.remove,
+    addedLabels: resolvedAddedLabels,
+    removedLabels: resolvedRemovedLabels,
   });
 
   logger.info({ taskId, userId, added: data.add.length, removed: data.remove.length }, 'Task labels updated');
@@ -680,7 +749,10 @@ export async function move(
       id: columns.id,
       boardId: columns.boardId,
       name: columns.name,
+      color: columns.color,
+      icon: columns.icon,
       isCompleted: columns.isCompleted,
+      isRejected: columns.isRejected,
     })
     .from(columns)
     .where(eq(columns.id, targetColumnId))
@@ -697,7 +769,10 @@ export async function move(
       id: columns.id,
       boardId: columns.boardId,
       name: columns.name,
+      color: columns.color,
+      icon: columns.icon,
       isCompleted: columns.isCompleted,
+      isRejected: columns.isRejected,
     })
     .from(columns)
     .where(eq(columns.id, context.columnId))
@@ -796,13 +871,16 @@ export async function move(
     };
 
     if (targetColumn.isCompleted) {
-      // Auto-complete: target is a completed column
       setFields.completedAt = new Date().toISOString();
     } else if (sourceColumn.isCompleted) {
-      // Was auto-completed by source column rule → remove
       setFields.completedAt = null;
     }
-    // else: keep existing completedAt (manual)
+
+    if (targetColumn.isRejected) {
+      setFields.rejectedAt = new Date().toISOString();
+    } else if (sourceColumn.isRejected) {
+      setFields.rejectedAt = null;
+    }
 
     const updated = await db
       .update(tasks)
@@ -813,17 +891,23 @@ export async function move(
     result = updated[0]!;
   }
 
-  // Log activity with column names
+  // Log activity with column names, colors, icons for rich badges
   if (!sameColumn) {
     await activityService.log(context.projectId, taskId, userId, 'task.moved', {
       oldColumn: sourceColumn.name,
       newColumn: targetColumn.name,
+      oldColumnColor: sourceColumn.color,
+      newColumnColor: targetColumn.color,
+      oldColumnIcon: sourceColumn.icon,
+      newColumnIcon: targetColumn.icon,
       oldColumnId: context.columnId,
       newColumnId: targetColumnId,
     });
   } else {
     await activityService.log(context.projectId, taskId, userId, 'task.moved', {
       column: sourceColumn.name,
+      columnColor: sourceColumn.color,
+      columnIcon: sourceColumn.icon,
       oldPosition: currentPosition,
       newPosition: targetPosition,
     });
@@ -855,4 +939,289 @@ export async function getContext(
     throw new NotFoundError('Task', taskId);
   }
   return { taskId: context.taskId, boardId: context.boardId, projectId: context.projectId };
+}
+
+// -- Bulk operations (cross-column, cross-board within same project) --
+
+interface BulkResult {
+  moved?: number;
+  duplicated?: number;
+  affectedBoardIds: string[];
+}
+
+interface BulkSourceTask {
+  id: string;
+  columnId: string;
+  boardId: string;
+  projectId: string;
+  sourceIsCompleted: boolean;
+  sourceIsRejected: boolean;
+}
+
+async function loadBulkContext(
+  taskIds: string[],
+  targetColumnId: string,
+  userId: string,
+): Promise<{
+  sourceTasks: BulkSourceTask[];
+  target: { columnId: string; boardId: string; projectId: string; isCompleted: boolean; isRejected: boolean };
+}> {
+  if (taskIds.length === 0) {
+    throw new ValidationError('No tasks provided');
+  }
+
+  const targetRows = await db
+    .select({
+      columnId: columns.id,
+      boardId: columns.boardId,
+      projectId: boards.projectId,
+      isCompleted: columns.isCompleted,
+      isRejected: columns.isRejected,
+    })
+    .from(columns)
+    .innerJoin(boards, eq(columns.boardId, boards.id))
+    .where(eq(columns.id, targetColumnId))
+    .limit(1);
+
+  const target = targetRows[0];
+  if (!target) {
+    throw new NotFoundError('Column', targetColumnId);
+  }
+
+  const sourceRows = await db
+    .select({
+      id: tasks.id,
+      columnId: tasks.columnId,
+      boardId: columns.boardId,
+      projectId: boards.projectId,
+      sourceIsCompleted: columns.isCompleted,
+      sourceIsRejected: columns.isRejected,
+    })
+    .from(tasks)
+    .innerJoin(columns, eq(tasks.columnId, columns.id))
+    .innerJoin(boards, eq(columns.boardId, boards.id))
+    .where(inArray(tasks.id, taskIds));
+
+  if (sourceRows.length !== taskIds.length) {
+    throw new NotFoundError('Task', 'One or more tasks not found');
+  }
+
+  for (const source of sourceRows) {
+    if (source.projectId !== target.projectId) {
+      throw new ValidationError('Bulk operations must stay within the same project');
+    }
+  }
+
+  const role = await getMemberRole(target.projectId, userId);
+  requireRole(role, ['owner', 'admin', 'member']);
+
+  return { sourceTasks: sourceRows, target };
+}
+
+export async function bulkMove(
+  taskIds: string[],
+  targetColumnId: string,
+  userId: string,
+): Promise<BulkResult> {
+  const { sourceTasks, target } = await loadBulkContext(taskIds, targetColumnId, userId);
+
+  const existingTargetTasks = await db
+    .select({ position: tasks.position })
+    .from(tasks)
+    .where(eq(tasks.columnId, target.columnId))
+    .orderBy(asc(tasks.position));
+
+  let nextPosition = existingTargetTasks.length > 0
+    ? existingTargetTasks[existingTargetTasks.length - 1]!.position + 1
+    : 0;
+
+  const affectedBoards = new Set<string>([target.boardId]);
+  const nowIso = new Date().toISOString();
+
+  for (const source of sourceTasks) {
+    const setFields: Record<string, unknown> = {
+      columnId: target.columnId,
+      position: nextPosition,
+      updatedAt: nowIso,
+    };
+    if (target.isCompleted) {
+      setFields.completedAt = nowIso;
+    } else if (source.sourceIsCompleted) {
+      setFields.completedAt = null;
+    }
+    if (target.isRejected) {
+      setFields.rejectedAt = nowIso;
+    } else if (source.sourceIsRejected) {
+      setFields.rejectedAt = null;
+    }
+
+    await db
+      .update(tasks)
+      .set(setFields)
+      .where(eq(tasks.id, source.id));
+
+    affectedBoards.add(source.boardId);
+    nextPosition += 1;
+
+    broadcastTaskMoved(
+      source.boardId,
+      {
+        taskId: source.id,
+        fromColumnId: source.columnId,
+        toColumnId: target.columnId,
+        position: nextPosition - 1,
+      },
+      userId,
+    );
+
+    if (source.boardId !== target.boardId) {
+      broadcastTaskMoved(
+        target.boardId,
+        {
+          taskId: source.id,
+          fromColumnId: source.columnId,
+          toColumnId: target.columnId,
+          position: nextPosition - 1,
+        },
+        userId,
+      );
+    }
+  }
+
+  // Re-pack positions in each affected source column
+  const sourceColumnIds = Array.from(new Set(sourceTasks.map((t) => t.columnId).filter((id) => id !== target.columnId)));
+  for (const columnId of sourceColumnIds) {
+    const remaining = await db
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(eq(tasks.columnId, columnId))
+      .orderBy(asc(tasks.position));
+
+    for (let index = 0; index < remaining.length; index += 1) {
+      await db
+        .update(tasks)
+        .set({ position: index, updatedAt: nowIso })
+        .where(eq(tasks.id, remaining[index]!.id));
+    }
+  }
+
+  try {
+    await activityService.log(target.projectId, target.columnId, userId, 'task.bulk_moved', {
+      count: sourceTasks.length,
+      targetColumnId: target.columnId,
+    });
+  } catch {
+    // best-effort
+  }
+
+  logger.info({ userId, count: sourceTasks.length, targetColumnId }, 'Tasks bulk-moved');
+
+  return { moved: sourceTasks.length, affectedBoardIds: Array.from(affectedBoards) };
+}
+
+export async function bulkDuplicate(
+  taskIds: string[],
+  targetColumnId: string,
+  userId: string,
+): Promise<BulkResult> {
+  const { sourceTasks, target } = await loadBulkContext(taskIds, targetColumnId, userId);
+
+  const existingTargetTasks = await db
+    .select({ position: tasks.position })
+    .from(tasks)
+    .where(eq(tasks.columnId, target.columnId))
+    .orderBy(asc(tasks.position));
+
+  let nextPosition = existingTargetTasks.length > 0
+    ? existingTargetTasks[existingTargetTasks.length - 1]!.position + 1
+    : 0;
+
+  const sourceTaskIds = sourceTasks.map((t) => t.id);
+
+  const originals = await db
+    .select()
+    .from(tasks)
+    .where(inArray(tasks.id, sourceTaskIds));
+  const originalsById = new Map(originals.map((t) => [t.id, t]));
+
+  const originalLabels = sourceTaskIds.length > 0
+    ? await db
+      .select({ taskId: taskLabels.taskId, labelId: taskLabels.labelId })
+      .from(taskLabels)
+      .where(inArray(taskLabels.taskId, sourceTaskIds))
+    : [];
+
+  const originalAssignees = sourceTaskIds.length > 0
+    ? await db
+      .select({ taskId: taskAssignees.taskId, userId: taskAssignees.userId })
+      .from(taskAssignees)
+      .where(inArray(taskAssignees.taskId, sourceTaskIds))
+    : [];
+
+  const labelsByTask = new Map<string, string[]>();
+  for (const row of originalLabels) {
+    const list = labelsByTask.get(row.taskId) ?? [];
+    list.push(row.labelId);
+    labelsByTask.set(row.taskId, list);
+  }
+
+  const assigneesByTask = new Map<string, string[]>();
+  for (const row of originalAssignees) {
+    const list = assigneesByTask.get(row.taskId) ?? [];
+    list.push(row.userId);
+    assigneesByTask.set(row.taskId, list);
+  }
+
+  let duplicatedCount = 0;
+
+  for (const sourceId of sourceTaskIds) {
+    const original = originalsById.get(sourceId);
+    if (!original) continue;
+
+    const nowIso = new Date().toISOString();
+    const inserted = await db
+      .insert(tasks)
+      .values({
+        columnId: target.columnId,
+        title: original.title,
+        description: original.description,
+        position: nextPosition,
+        priority: original.priority,
+        dueDate: original.dueDate,
+        creatorId: userId,
+        completedAt: target.isCompleted ? nowIso : null,
+        rejectedAt: target.isRejected ? nowIso : null,
+      })
+      .returning();
+
+    const newTask = inserted[0]!;
+    nextPosition += 1;
+    duplicatedCount += 1;
+
+    const labelIds = labelsByTask.get(sourceId) ?? [];
+    if (labelIds.length > 0) {
+      await db.insert(taskLabels).values(labelIds.map((labelId) => ({ taskId: newTask.id, labelId })));
+    }
+
+    const assigneeIds = assigneesByTask.get(sourceId) ?? [];
+    if (assigneeIds.length > 0) {
+      await db.insert(taskAssignees).values(assigneeIds.map((uid) => ({ taskId: newTask.id, userId: uid })));
+    }
+
+    const enriched = {
+      ...newTask,
+      labels: [],
+      assignees: [],
+      commentCount: 0,
+      checklistTotal: 0,
+      checklistCompleted: 0,
+      attachmentCount: 0,
+      linkCount: 0,
+    };
+    broadcastTaskCreated(target.boardId, enriched, userId);
+  }
+
+  logger.info({ userId, count: duplicatedCount, targetColumnId }, 'Tasks bulk-duplicated');
+
+  return { duplicated: duplicatedCount, affectedBoardIds: [target.boardId] };
 }

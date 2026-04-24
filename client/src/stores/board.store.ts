@@ -29,6 +29,9 @@ interface BoardState {
   updateTask: (taskId: string, data: Parameters<typeof tasksApi.updateTask>[1]) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   moveTask: (taskId: string, toColumnId: string, newPosition: number) => Promise<void>;
+  bulkMoveTasks: (taskIds: string[], targetColumnId: string) => Promise<void>;
+  bulkDuplicateTasks: (taskIds: string[], targetColumnId: string) => Promise<void>;
+  bulkDeleteTasks: (taskIds: string[]) => Promise<void>;
   moveTaskOptimistic: (
     taskId: string,
     fromColumnId: string,
@@ -237,6 +240,38 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         newTasksByColumn[toColumnId] = destinationTasks;
       }
 
+      return { tasksByColumn: newTasksByColumn };
+    });
+  },
+
+  bulkMoveTasks: async (taskIds: string[], targetColumnId: string): Promise<void> => {
+    await tasksApi.bulkMoveTasks(taskIds, targetColumnId);
+    const { board } = get();
+    if (board) {
+      const tasksByColumn = await tasksApi.listTasks(board.id);
+      set({ tasksByColumn });
+    }
+  },
+
+  bulkDuplicateTasks: async (taskIds: string[], targetColumnId: string): Promise<void> => {
+    await tasksApi.bulkDuplicateTasks(taskIds, targetColumnId);
+    const { board } = get();
+    if (board) {
+      const tasksByColumn = await tasksApi.listTasks(board.id);
+      set({ tasksByColumn });
+    }
+  },
+
+  bulkDeleteTasks: async (taskIds: string[]): Promise<void> => {
+    await Promise.all(taskIds.map((id) => tasksApi.deleteTask(id)));
+    set((state) => {
+      const newTasksByColumn = { ...state.tasksByColumn };
+      const idSet = new Set(taskIds);
+      for (const columnId of Object.keys(newTasksByColumn)) {
+        const tasks = newTasksByColumn[columnId];
+        if (!tasks) continue;
+        newTasksByColumn[columnId] = tasks.filter((task) => !idSet.has(task.id));
+      }
       return { tasksByColumn: newTasksByColumn };
     });
   },

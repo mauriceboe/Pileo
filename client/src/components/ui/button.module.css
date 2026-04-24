@@ -87,6 +87,15 @@
   font-size: 14px;
 }
 
+/* Content wrapper — inline-flex so icon + text stay on one row */
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 /* Loading */
 .loading { position: relative; }
 .spinnerWrapper { position: absolute; display: flex; align-items: center; justify-content: center; }

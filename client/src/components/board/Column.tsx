@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -14,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { Column as ColumnType } from '@pileo/shared';
 import { useBoardStore } from '../../stores/board.store';
+import { useSelectionStore } from '../../stores/selection.store';
 import { ColumnHeader } from './ColumnHeader';
 import { TaskCard } from './TaskCard';
 import { AddTaskButton } from './AddTaskButton';
@@ -21,6 +24,7 @@ import { Dialog } from '../ui/Dialog';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { ColorPicker } from '../ui/ColorPicker';
+import { Toggle } from '../ui/Toggle';
 import styles from './column.module.css';
 import editStyles from './edit-column-dialog.module.css';
 
@@ -75,26 +79,60 @@ interface ColumnProps {
 
 export function Column({ column }: ColumnProps) {
   const { updateColumn, deleteColumn, tasksByColumn } = useBoardStore();
+  const {
+    activeColumnId: selectionColumnId,
+    selectedTaskIds,
+    enterMode,
+    exitMode,
+    selectMany,
+    clear: clearSelection,
+  } = useSelectionStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(column.name);
   const [editColor, setEditColor] = useState(column.color);
   const [editIcon, setEditIcon] = useState(column.icon ?? '');
   const [editIsCompleted, setEditIsCompleted] = useState(column.isCompleted);
+  const [editIsRejected, setEditIsRejected] = useState(column.isRejected);
   const [isSaving, setIsSaving] = useState(false);
 
   const tasks = tasksByColumn[column.id] ?? [];
   const taskIds = tasks.map((task) => task.id);
 
-  const { setNodeRef } = useDroppable({
+  const selectionMode = selectionColumnId === column.id;
+  const selectedCount = selectionMode
+    ? tasks.filter((t) => selectedTaskIds.has(t.id)).length
+    : 0;
+  const allSelected = selectionMode && tasks.length > 0 && selectedCount === tasks.length;
+
+  const {
+    attributes: sortAttributes,
+    listeners: sortListeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging: isColumnDragging,
+  } = useSortable({
+    id: `col:${column.id}`,
+    data: { type: 'column', columnId: column.id },
+  });
+
+  const { setNodeRef: setDroppableRef } = useDroppable({
     id: column.id,
     data: { type: 'column', columnId: column.id },
   });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isColumnDragging ? 0.35 : 1,
+  };
 
   const handleEdit = () => {
     setEditName(column.name);
     setEditColor(column.color);
     setEditIcon(column.icon ?? '');
     setEditIsCompleted(column.isCompleted);
+    setEditIsRejected(column.isRejected);
     setIsEditing(true);
   };
 
@@ -103,6 +141,23 @@ export function Column({ column }: ColumnProps) {
       return;
     }
     await deleteColumn(column.id);
+  };
+
+  const handleToggleSelectionMode = () => {
+    if (selectionMode) {
+      exitMode();
+    } else {
+      enterMode(column.id);
+    }
+  };
+
+  const handleToggleSelectAll = () => {
+    if (!selectionMode) return;
+    if (allSelected) {
+      clearSelection();
+    } else {
+      selectMany(tasks.map((t) => t.id));
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -114,6 +169,7 @@ export function Column({ column }: ColumnProps) {
         color: editColor,
         icon: editIcon || null,
         isCompleted: editIsCompleted,
+        isRejected: editIsRejected,
       });
       setIsEditing(false);
     } finally {
@@ -122,17 +178,28 @@ export function Column({ column }: ColumnProps) {
   };
 
   return (
-    <div className={styles.column}>
+    <div
+      ref={setSortableRef}
+      style={sortableStyle}
+      className={`${styles.column} ${selectionMode ? styles.columnSelecting : ''}`}
+      {...sortAttributes}
+    >
       <ColumnHeader
         name={column.name}
         color={column.color}
         icon={column.icon}
         taskCount={tasks.length}
+        selectionMode={selectionMode}
+        selectedCount={selectedCount}
+        allSelected={allSelected}
+        dragListeners={sortListeners}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onToggleSelectionMode={handleToggleSelectionMode}
+        onToggleSelectAll={handleToggleSelectAll}
       />
 
-      <div className={styles.taskArea} ref={setNodeRef}>
+      <div className={styles.taskArea} ref={setDroppableRef}>
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 && (
             <div className={styles.taskPlaceholder}>
@@ -149,26 +216,37 @@ export function Column({ column }: ColumnProps) {
         </SortableContext>
       </div>
 
-      <AddTaskButton columnId={column.id} color={column.color} />
+      {!selectionMode && <AddTaskButton columnId={column.id} color={column.color} />}
 
       <Dialog
         open={isEditing}
         onClose={() => setIsEditing(false)}
-        title="Edit Column"
+        title={
+          <span className={editStyles.dialogTitle}>
+            <span className={editStyles.dialogTitleName}>{column.name}</span>
+            <span className={editStyles.dialogTitleBadge}>Column Settings</span>
+          </span>
+        }
+        ariaLabel={`${column.name} — Column Settings`}
+        size="xl"
       >
-        <div className={editStyles.form}>
-          <Input
-            label="Column Name"
-            value={editName}
-            onChange={(event) => setEditName(event.target.value)}
-            autoFocus
-          />
-          <div>
-            <label className={editStyles.fieldLabel}>Color</label>
-            <ColorPicker value={editColor} onChange={setEditColor} />
-          </div>
-          <div>
-            <label className={editStyles.fieldLabel}>Icon (optional)</label>
+        <div className={editStyles.grid}>
+          <section className={editStyles.section}>
+            <h3 className={editStyles.sectionTitle}>Basics</h3>
+            <Input
+              label="Column Name"
+              value={editName}
+              onChange={(event) => setEditName(event.target.value)}
+              autoFocus
+            />
+            <div>
+              <label className={editStyles.fieldLabel}>Color</label>
+              <ColorPicker value={editColor} onChange={setEditColor} />
+            </div>
+          </section>
+
+          <section className={editStyles.section}>
+            <h3 className={editStyles.sectionTitle}>Icon</h3>
             <div className={editStyles.iconGrid}>
               <button
                 type="button"
@@ -190,26 +268,45 @@ export function Column({ column }: ColumnProps) {
                 </button>
               ))}
             </div>
-          </div>
-          <label className={editStyles.toggleRow}>
-            <input
-              type="checkbox"
-              checked={editIsCompleted}
-              onChange={(event) => setEditIsCompleted(event.target.checked)}
-              className={editStyles.toggleCheckbox}
-            />
-            <span className={editStyles.toggleLabel}>
-              Mark tasks as completed when moved here
-            </span>
-          </label>
-          <div className={editStyles.actions}>
-            <Button variant="secondary" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit} loading={isSaving}>
-              Save
-            </Button>
-          </div>
+          </section>
+
+          <section className={editStyles.section}>
+            <h3 className={editStyles.sectionTitle}>Behavior</h3>
+            <p className={editStyles.sectionHint}>
+              Automatic status when a task is moved into this column.
+            </p>
+            <div className={editStyles.toggleGroup}>
+              <Toggle
+                checked={editIsCompleted}
+                onChange={(value) => {
+                  setEditIsCompleted(value);
+                  if (value) setEditIsRejected(false);
+                }}
+                label="Mark as completed"
+                description="Tasks moved into this column are marked complete."
+                accent="#22C55E"
+              />
+              <Toggle
+                checked={editIsRejected}
+                onChange={(value) => {
+                  setEditIsRejected(value);
+                  if (value) setEditIsCompleted(false);
+                }}
+                label="Mark as rejected"
+                description="Tasks moved into this column are marked rejected."
+                accent="#9CA3AF"
+              />
+            </div>
+          </section>
+        </div>
+
+        <div className={editStyles.actions}>
+          <Button variant="secondary" onClick={() => setIsEditing(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSaveEdit} loading={isSaving}>
+            Save
+          </Button>
         </div>
       </Dialog>
     </div>

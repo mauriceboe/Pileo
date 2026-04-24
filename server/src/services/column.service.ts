@@ -80,6 +80,7 @@ export async function create(
       icon: data.icon ?? null,
       position: nextPosition,
       isCompleted: data.isCompleted ?? false,
+      isRejected: data.isRejected ?? false,
       taskLimit: data.taskLimit ?? null,
     })
     .returning();

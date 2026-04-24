@@ -11,3 +11,4 @@ export { notifications } from './notifications.js';
 export { activityLog } from './activity-log.js';
 export { passwordResetTokens } from './password-reset-tokens.js';
 export { taskLinks } from './links.js';
+export { apiKeys } from './api-keys.js';

@@ -6,6 +6,7 @@ import {
   createTaskSchema,
   updateTaskSchema,
   moveTaskSchema,
+  bulkTaskOperationSchema,
   updateTaskAssigneesSchema,
   updateTaskLabelsSchema,
 } from '@pileo/shared';
@@ -13,6 +14,7 @@ import type {
   CreateTaskInput,
   UpdateTaskInput,
   MoveTaskInput,
+  BulkTaskOperationInput,
   UpdateTaskAssigneesInput,
   UpdateTaskLabelsInput,
 } from '@pileo/shared';
@@ -85,6 +87,20 @@ taskRouter.patch('/:taskId/labels', validate(updateTaskLabelsSchema), async (req
   const body = (req as Request & { validatedBody: UpdateTaskLabelsInput }).validatedBody;
   const updated = await taskService.updateLabels(req.params.taskId!, (req as AuthenticatedRequest).user.id, body);
   res.status(200).json({ data: updated });
+});
+
+// POST /tasks/bulk-move
+taskRouter.post('/bulk-move', validate(bulkTaskOperationSchema), async (req: Request, res: Response): Promise<void> => {
+  const body = (req as Request & { validatedBody: BulkTaskOperationInput }).validatedBody;
+  const result = await taskService.bulkMove(body.taskIds, body.targetColumnId, (req as AuthenticatedRequest).user.id);
+  res.status(200).json({ data: result });
+});
+
+// POST /tasks/bulk-duplicate
+taskRouter.post('/bulk-duplicate', validate(bulkTaskOperationSchema), async (req: Request, res: Response): Promise<void> => {
+  const body = (req as Request & { validatedBody: BulkTaskOperationInput }).validatedBody;
+  const result = await taskService.bulkDuplicate(body.taskIds, body.targetColumnId, (req as AuthenticatedRequest).user.id);
+  res.status(200).json({ data: result });
 });
 
 export { boardTaskRouter, columnTaskRouter, taskRouter };

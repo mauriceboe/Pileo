@@ -33,7 +33,7 @@ export function TaskDescription({ taskId, description }: TaskDescriptionProps) {
     ],
     content: description ?? '',
     onUpdate: ({ editor: editorInstance }) => {
-      handleSave(editorInstance.getText());
+      handleSave(editorInstance.getHTML());
     },
     onBlur: ({ editor: editorInstance }) => {
       // Ensure immediate save on blur
@@ -41,7 +41,8 @@ export function TaskDescription({ taskId, description }: TaskDescriptionProps) {
         clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = null;
       }
-      const value = editorInstance.getText().trim() || null;
+      const isEmpty = !editorInstance.getText().trim();
+      const value = isEmpty ? null : editorInstance.getHTML();
       updateTask(taskId, { description: value });
     },
   });

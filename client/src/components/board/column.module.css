@@ -8,11 +8,21 @@
   background-color: #FFFFFF;
   border-right: 1px solid #EBEDF0;
   overflow: hidden;
+  outline: none;
+}
+
+.column:focus,
+.column:focus-visible {
+  outline: none;
 }
 
 [data-theme='dark'] .column {
   background-color: var(--color-surface);
   border-right-color: var(--color-border);
+}
+
+.columnSelecting {
+  outline: none;
 }
 
 .taskArea {

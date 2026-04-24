@@ -129,9 +129,9 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
           </div>
         </div>
       ) : (
-        <button className={styles.addButton} onClick={() => setShowAdd(true)}>
+        <Button size="sm" variant="secondary" onClick={() => setShowAdd(true)}>
           <Plus size={14} /> Add Custom Field
-        </button>
+        </Button>
       )}
     </div>
   );

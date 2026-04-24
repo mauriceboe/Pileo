@@ -46,7 +46,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             <LoadingSpinner size="sm" />
           </span>
         )}
-        <span className={loading ? styles.hiddenContent : ''}>
+        <span className={`${styles.content} ${loading ? styles.hiddenContent : ''}`}>
           {children}
         </span>
       </button>

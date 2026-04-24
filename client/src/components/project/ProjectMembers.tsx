@@ -4,11 +4,18 @@ import { PROJECT_MEMBER_ROLES } from '@pileo/shared';
 import type { ProjectMember, ProjectMemberRole } from '@pileo/shared';
 import * as projectsApi from '../../api/projects.api';
 import { Avatar } from '../ui/Avatar';
-import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Input } from '../ui/Input';
+import { CustomSelect } from '../ui/CustomSelect';
 import styles from './project-members.module.css';
+
+const ROLE_OPTIONS = PROJECT_MEMBER_ROLES
+  .filter((role) => role !== 'owner')
+  .map((role) => ({
+    value: role,
+    label: role.charAt(0).toUpperCase() + role.slice(1),
+  }));
 
 interface ProjectMembersProps {
   projectId: string;
@@ -19,6 +26,25 @@ interface MemberWithUser extends ProjectMember {
   displayName?: string;
   email?: string;
   avatarPath?: string | null;
+  user?: {
+    id: string;
+    email: string;
+    username: string;
+    displayName: string;
+    avatarPath: string | null;
+  };
+}
+
+function flattenMember(member: MemberWithUser): MemberWithUser {
+  if (member.user) {
+    return {
+      ...member,
+      displayName: member.user.displayName,
+      email: member.user.email,
+      avatarPath: member.user.avatarPath,
+    };
+  }
+  return member;
 }
 
 export function ProjectMembers({ projectId }: ProjectMembersProps) {
@@ -30,7 +56,7 @@ export function ProjectMembers({ projectId }: ProjectMembersProps) {
     setIsLoading(true);
     try {
       const data = await projectsApi.listMembers(projectId);
-      setMembers(data as MemberWithUser[]);
+      setMembers((data as MemberWithUser[]).map(flattenMember));
     } catch {
       // API error handled by the fetch client
     } finally {
@@ -71,7 +97,7 @@ export function ProjectMembers({ projectId }: ProjectMembersProps) {
   };
 
   const handleMemberAdded = (member: MemberWithUser): void => {
-    setMembers((previous) => [...previous, member]);
+    setMembers((previous) => [...previous, flattenMember(member)]);
     setShowShareDialog(false);
   };
 
@@ -107,37 +133,25 @@ export function ProjectMembers({ projectId }: ProjectMembersProps) {
                   )}
                 </div>
                 <div className={styles.memberActions}>
-                  {isOwner ? (
-                    <Badge variant="primary">Owner</Badge>
-                  ) : (
-                    <>
-                      <select
-                        className={styles.roleSelect}
-                        value={member.role}
-                        onChange={(event) =>
-                          handleRoleChange(
-                            member.userId,
-                            event.target.value as ProjectMemberRole,
-                          )
-                        }
-                      >
-                        {PROJECT_MEMBER_ROLES.filter((role) => role !== 'owner').map(
-                          (role) => (
-                            <option key={role} value={role}>
-                              {role.charAt(0).toUpperCase() + role.slice(1)}
-                            </option>
-                          ),
-                        )}
-                      </select>
-                      <button
-                        className={styles.removeButton}
-                        onClick={() => handleRemove(member.userId)}
-                        aria-label="Remove member"
-                      >
-                        <X size={16} />
-                      </button>
-                    </>
-                  )}
+                  <div className={styles.roleSelectWrapper}>
+                    <CustomSelect
+                      value={isOwner ? 'owner' : member.role}
+                      onChange={(value) =>
+                        handleRoleChange(member.userId, value as ProjectMemberRole)
+                      }
+                      options={isOwner ? [{ value: 'owner', label: 'Owner' }] : ROLE_OPTIONS}
+                      disabled={isOwner}
+                    />
+                  </div>
+                  <button
+                    className={styles.removeButton}
+                    onClick={() => handleRemove(member.userId)}
+                    aria-label="Remove member"
+                    disabled={isOwner}
+                    style={isOwner ? { visibility: 'hidden' } : undefined}
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
               </div>
             );
@@ -212,17 +226,11 @@ function ShareDialog({ open, onClose, projectId, onMemberAdded }: ShareDialogPro
         />
         <div className={styles.shareRoleSelect}>
           <label className={styles.shareRoleLabel}>Role</label>
-          <select
-            className={styles.roleSelect}
+          <CustomSelect
             value={role}
-            onChange={(event) => setRole(event.target.value as ProjectMemberRole)}
-          >
-            {PROJECT_MEMBER_ROLES.filter((r) => r !== 'owner').map((r) => (
-              <option key={r} value={r}>
-                {r.charAt(0).toUpperCase() + r.slice(1)}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setRole(value as ProjectMemberRole)}
+            options={ROLE_OPTIONS}
+          />
         </div>
         {error && <p className={styles.shareError}>{error}</p>}
         <div className={styles.shareActions}>

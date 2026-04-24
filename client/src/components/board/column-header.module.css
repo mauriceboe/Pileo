@@ -68,7 +68,8 @@
   transition: opacity var(--transition-fast);
 }
 
-.header:hover .actions {
+.header:hover .actions,
+.actions:has([aria-expanded="true"]) {
   opacity: 1;
 }
 
@@ -84,7 +85,66 @@
   background-color: rgba(255, 255, 255, 0.18);
 }
 
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: grab;
+  margin-left: -4px;
+  padding: 4px 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+.dragHandle:active { cursor: grabbing; }
+.header:hover .dragHandle { opacity: 1; }
+.dragHandle:hover { color: #FFFFFF; }
+
+.selectionHeader { background-image: linear-gradient(to right, rgba(0,0,0,0.15), rgba(0,0,0,0)); }
+
+.selectAllBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.selectAllBox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255,255,255,0.85);
+  background-color: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  transition: all 120ms ease;
+}
+.selectAllBoxOn { background-color: #FFFFFF; color: var(--color-primary); border-color: #FFFFFF; }
+
+.exitSelectBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+.exitSelectBtn:hover { background-color: rgba(255,255,255,0.2); color: #FFFFFF; }
+
 @media (max-width: 767px) {
   .header { height: 44px; padding: 0 10px; }
   .actions { opacity: 1; }
+  .dragHandle { opacity: 1; }
 }

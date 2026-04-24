@@ -7,15 +7,18 @@ import styles from './task-due-date.module.css';
 interface TaskDueDateProps {
   taskId: string;
   dueDate: Date | string | null;
+  isCompleted?: boolean;
+  isRejected?: boolean;
 }
 
-export function TaskDueDate({ taskId, dueDate }: TaskDueDateProps) {
+export function TaskDueDate({ taskId, dueDate, isCompleted, isRejected }: TaskDueDateProps) {
   const updateTask = useBoardStore((state) => state.updateTask);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const parsedDate = dueDate ? new Date(dueDate) : null;
-  const isOverdue = parsedDate && isPast(parsedDate) && !isToday(parsedDate);
-  const isDueToday = parsedDate && isToday(parsedDate);
+  const isInactive = !!isCompleted || !!isRejected;
+  const isOverdue = !isInactive && parsedDate && isPast(parsedDate) && !isToday(parsedDate);
+  const isDueToday = !isInactive && parsedDate && isToday(parsedDate);
 
   const handleDateChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;

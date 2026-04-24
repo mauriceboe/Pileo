@@ -39,6 +39,27 @@
   margin: 0;
 }
 
+.columnDragPreview {
+  width: 320px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  background-color: #FFFFFF;
+  transform: rotate(1deg);
+  cursor: grabbing;
+}
+[data-theme='dark'] .columnDragPreview { background-color: var(--color-surface); }
+
+.columnDragPreviewHeader {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  height: 40px;
+  color: #FFFFFF;
+  font-weight: var(--font-weight-bold);
+  font-size: 13px;
+}
+
 @media (max-width: 767px) {
   .container {
     -webkit-overflow-scrolling: touch;

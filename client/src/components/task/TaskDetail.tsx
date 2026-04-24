@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   XCircle as XCircle2,
   Link,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { useBoardStore } from '../../stores/board.store';
 import { TaskDescription } from './TaskDescription';
@@ -103,15 +102,6 @@ export function TaskDetail() {
       <div className={styles.panel} ref={panelRef}>
         {/* Header */}
         <div className={styles.header}>
-          <button
-            className={styles.closeButton}
-            onClick={closeTaskDetail}
-            aria-label="Close task detail"
-            type="button"
-          >
-            <X size={18} />
-          </button>
-
           <div className={styles.headerContent}>
             <input
               ref={titleInputRef}
@@ -134,6 +124,15 @@ export function TaskDetail() {
               </div>
             )}
           </div>
+
+          <button
+            className={styles.closeButton}
+            onClick={closeTaskDetail}
+            aria-label="Close task detail"
+            type="button"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <div className={styles.headerDivider} />
@@ -160,19 +159,6 @@ export function TaskDetail() {
                     description={selectedTask.description}
                   />
                 </div>
-
-                {/* Custom Fields */}
-                {board && (
-                  <div className={styles.section}>
-                    <div className={styles.sectionHeader}>
-                      <span className={styles.sectionIcon}>
-                        <SlidersHorizontal size={15} />
-                      </span>
-                      <h4 className={styles.sectionTitle}>Custom Fields</h4>
-                    </div>
-                    <TaskCustomFields taskId={selectedTask.id} projectId={board.projectId} />
-                  </div>
-                )}
 
                 {/* Checklist */}
                 <div className={styles.section}>
@@ -206,6 +192,21 @@ export function TaskDetail() {
                   </div>
                   <TaskLinks taskId={selectedTask.id} />
                 </div>
+              </div>
+
+              {/* Middle column */}
+              <div className={styles.secondaryContent}>
+                {/* Custom Fields — only rendered if project has enabled fields */}
+                {board && (
+                  <TaskCustomFields
+                    taskId={selectedTask.id}
+                    projectId={board.projectId}
+                    sectionClassName={styles.section}
+                    headerClassName={styles.sectionHeader}
+                    headerIconClassName={styles.sectionIcon}
+                    headerTitleClassName={styles.sectionTitle}
+                  />
+                )}
 
                 {/* Comments */}
                 <div className={styles.section}>
@@ -251,6 +252,8 @@ export function TaskDetail() {
                   <TaskDueDate
                     taskId={selectedTask.id}
                     dueDate={selectedTask.dueDate}
+                    isCompleted={!!selectedTask.completedAt}
+                    isRejected={!!selectedTask.rejectedAt}
                   />
                 </div>
 

@@ -2,14 +2,18 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import styles from './dialog.module.css';
 
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
 interface DialogProps {
   open: boolean;
   onClose: () => void;
-  title: string;
+  title: ReactNode;
+  ariaLabel?: string;
   children: ReactNode;
+  size?: DialogSize;
 }
 
-export function Dialog({ open, onClose, title, children }: DialogProps) {
+export function Dialog({ open, onClose, title, ariaLabel, children, size = 'md' }: DialogProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,6 +37,16 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
     }
   };
 
+  const sizeClass = size === 'sm'
+    ? styles.sizeSm
+    : size === 'lg'
+      ? styles.sizeLg
+      : size === 'xl'
+        ? styles.sizeXl
+        : size === '2xl'
+          ? styles.size2xl
+          : styles.sizeMd;
+
   return (
     <div
       className={styles.overlay}
@@ -40,9 +54,9 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
-      aria-label={title}
+      aria-label={ariaLabel ?? (typeof title === 'string' ? title : undefined)}
     >
-      <div className={styles.dialog}>
+      <div className={`${styles.dialog} ${sizeClass}`}>
         <div className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
           <button

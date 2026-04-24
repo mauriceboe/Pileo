@@ -43,6 +43,11 @@ export const moveTaskSchema = z.object({
   position: z.number().int().min(0),
 });
 
+export const bulkTaskOperationSchema = z.object({
+  taskIds: z.array(z.string().uuid()).min(1).max(500),
+  targetColumnId: z.string().uuid(),
+});
+
 export const updateTaskAssigneesSchema = z.object({
   add: z.array(z.string().uuid()).optional().default([]),
   remove: z.array(z.string().uuid()).optional().default([]),

@@ -12,14 +12,15 @@
 .editor :global(.ProseMirror) {
   outline: none;
   min-height: 60px;
-  padding: var(--spacing-sm);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   transition: border-color var(--transition-fast);
 }
 
 .editor :global(.ProseMirror:hover) {
-  border-color: var(--color-border);
+  border-color: var(--color-text-muted);
 }
 
 .editor :global(.ProseMirror:focus) {

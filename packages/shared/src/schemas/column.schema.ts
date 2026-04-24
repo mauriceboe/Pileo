@@ -9,6 +9,7 @@ export const columnSchema = z.object({
   icon: z.string().max(50).nullable(),
   position: z.number().int().min(0),
   isCompleted: z.boolean().default(false),
+  isRejected: z.boolean().default(false),
   taskLimit: z.number().int().min(1).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -23,6 +24,7 @@ export const createColumnSchema = z.object({
   color: z.string().regex(HEX_COLOR_REGEX, "Invalid hex color code").optional(),
   icon: z.string().max(50).nullable().optional(),
   isCompleted: z.boolean().optional(),
+  isRejected: z.boolean().optional(),
   taskLimit: z.number().int().min(1).nullable().optional(),
 });
 
@@ -32,5 +34,6 @@ export const updateColumnSchema = z.object({
   icon: z.string().max(50).nullable().optional(),
   position: z.number().int().min(0).optional(),
   isCompleted: z.boolean().optional(),
+  isRejected: z.boolean().optional(),
   taskLimit: z.number().int().min(1).nullable().optional(),
 });

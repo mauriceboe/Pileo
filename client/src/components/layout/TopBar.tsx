@@ -154,7 +154,14 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
         <Dialog
           open={projectSettingsOpen}
           onClose={() => setProjectSettingsOpen(false)}
-          title={`${selectedProject.name} — Settings`}
+          title={
+            <span className={styles.projectSettingsTitle}>
+              <span className={styles.projectSettingsName}>{selectedProject.name}</span>
+              <span className={styles.projectSettingsBadge}>Project Settings</span>
+            </span>
+          }
+          ariaLabel={`${selectedProject.name} — Project Settings`}
+          size="2xl"
         >
           <ProjectSettings project={selectedProject} />
         </Dialog>
