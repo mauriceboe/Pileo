@@ -1,47 +1,57 @@
 .container {
-  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-base);
+  gap: var(--spacing-sm);
 }
 
 .title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-secondary);
   margin: 0;
+  white-space: nowrap;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  overflow: hidden;
 }
 
 .memberRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
+  gap: var(--spacing-sm);
+  padding: 8px 10px;
+  background-color: var(--color-surface);
   transition: background-color var(--transition-fast);
+  min-width: 0;
 }
 
 .memberRow:hover {
-  background-color: var(--color-background);
+  background-color: var(--color-surface-hover, var(--color-background));
 }
 
 .memberInfo {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .memberName {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
   overflow: hidden;
@@ -50,29 +60,26 @@
 }
 
 .memberEmail {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .memberActions {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.roleSelect {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-family: var(--font-family);
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  cursor: pointer;
+.roleSelectWrapper {
+  width: 110px;
 }
 
 .removeButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
@@ -82,19 +89,23 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
+  flex-shrink: 0;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .removeButton:hover {
-  background-color: #fde8e8;
+  background-color: color-mix(in srgb, var(--color-error) 12%, transparent);
   color: var(--color-error);
 }
 
 .empty {
   text-align: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-base);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-base);
+  margin: 0;
 }
 
 /* --- Share dialog --- */

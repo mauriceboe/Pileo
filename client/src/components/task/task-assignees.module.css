@@ -49,21 +49,22 @@
 .addButton {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  gap: 8px;
+  padding: 8px 12px;
+  width: 100%;
   border: 1px dashed var(--color-border);
-  border-radius: var(--radius-full);
-  background: transparent;
+  border-radius: 8px;
+  background: var(--color-surface);
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: 13px;
   font-family: var(--font-family);
   cursor: pointer;
   transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .addButton:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
 .dropdown {

@@ -7,6 +7,8 @@ import type { TaskWithRelations } from '../../api/tasks.api';
 import { useBoardStore } from '../../stores/board.store';
 import { useWebSocketStore } from '../../stores/websocket.store';
 import { useAuthStore } from '../../stores/auth.store';
+import { useSelectionStore } from '../../stores/selection.store';
+import { Check } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Avatar } from '../ui/Avatar';
 import { ContextMenu, type ContextMenuState } from '../ui/ContextMenu';
@@ -20,6 +22,26 @@ function getFocusColor(userId: string): string {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) | 0;
   return FOCUS_COLORS[Math.abs(hash) % FOCUS_COLORS.length]!;
+}
+
+// Keep only inline formatting tags; drop headings, blockquotes, code blocks, images, scripts, etc.
+const INLINE_TAG_REGEX = /^(strong|b|em|i|u|s|del|ins|mark|code|sub|sup|br|span)$/i;
+const BLOCK_TO_INLINE_OPEN = /<(p|div|li|h[1-6])\b[^>]*>/gi;
+const BLOCK_TO_INLINE_CLOSE = /<\/(p|div|li|h[1-6])>/gi;
+const LIST_TAG = /<\/?(ul|ol)\b[^>]*>/gi;
+const ANY_OPEN_TAG = /<([a-z][a-z0-9-]*)\b[^>]*>/gi;
+const ANY_CLOSE_TAG = /<\/([a-z][a-z0-9-]*)>/gi;
+
+function sanitizePreviewHtml(html: string): string {
+  if (!html) return '';
+  let out = html
+    .replace(BLOCK_TO_INLINE_OPEN, ' ')
+    .replace(BLOCK_TO_INLINE_CLOSE, ' ')
+    .replace(LIST_TAG, ' ');
+  out = out
+    .replace(ANY_OPEN_TAG, (match, tag) => (INLINE_TAG_REGEX.test(tag) ? match : ''))
+    .replace(ANY_CLOSE_TAG, (match, tag) => (INLINE_TAG_REGEX.test(tag) ? match : ''));
+  return out.replace(/\s+/g, ' ').trim();
 }
 
 interface TaskCardProps {
@@ -37,9 +59,19 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
   const presenceUsers = useWebSocketStore((s) => s.presenceUsers);
   const currentUserId = useAuthStore((s) => s.user?.id);
 
+  const selectionActiveColumnId = useSelectionStore((s) => s.activeColumnId);
+  const selectedTaskIds = useSelectionStore((s) => s.selectedTaskIds);
+  const toggleSelection = useSelectionStore((s) => s.toggleTask);
+  const selectionMode = selectionActiveColumnId === task.columnId;
+  const isSelected = selectionMode && selectedTaskIds.has(task.id);
+
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
-  } = useSortable({ id: task.id, data: { type: 'task', task } });
+  } = useSortable({
+    id: task.id,
+    data: { type: 'task', task },
+    disabled: selectionMode,
+  });
 
   let focusedByUser: { userId: string; name: string; color: string } | null = null;
   for (const [userId, focusedTaskId] of taskFocus) {
@@ -71,9 +103,18 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
     styles.card,
     isDragging ? styles.dragging : '',
     isDragOverlay ? styles.dragOverlay : '',
+    selectionMode ? styles.selectionMode : '',
+    isSelected ? styles.selected : '',
   ].filter(Boolean).join(' ');
 
-  const handleClick = () => { if (!isDragging) openTaskDetail(task.id); };
+  const handleClick = (event: React.MouseEvent) => {
+    if (selectionMode) {
+      event.stopPropagation();
+      toggleSelection(task.id);
+      return;
+    }
+    if (!isDragging) openTaskDetail(task.id);
+  };
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -116,7 +157,15 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
   const hasMeta = showDueDate || hasChecklist || hasComments || hasAttachments || hasLinks || hasLabels;
 
   return (
-    <div ref={setNodeRef} style={style} className={cardClassName} onClick={handleClick} onContextMenu={handleContextMenu} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cardClassName}
+      onClick={handleClick}
+      onContextMenu={selectionMode ? undefined : handleContextMenu}
+      {...(selectionMode ? {} : attributes)}
+      {...(selectionMode ? {} : listeners)}
+    >
       {ctxMenu && (
         <ContextMenu
           x={ctxMenu.x}
@@ -156,6 +205,11 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
           ]}
         />
       )}
+      {selectionMode && (
+        <span className={`${styles.selectCheckbox} ${isSelected ? styles.selectCheckboxOn : ''}`} aria-hidden>
+          {isSelected && <Check size={12} strokeWidth={3} />}
+        </span>
+      )}
       {/* Focus name tag — absolute top right */}
       {focusedByUser && (
         <span className={styles.focusTag} style={{ backgroundColor: focusedByUser.color }}>
@@ -173,13 +227,23 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
 
       {task.assignees?.length > 0 && (
         <div className={styles.avatarTopRight}>
-          <Avatar name={task.assignees[0]!.displayName} src={task.assignees[0]!.avatarPath} size="sm" className={styles.avatar} />
+          <div className={styles.avatarTooltipWrap}>
+            <Avatar name={task.assignees[0]!.displayName} src={task.assignees[0]!.avatarPath} size="sm" className={styles.avatar} />
+            <span className={styles.avatarTooltip} role="tooltip">
+              {task.assignees[0]!.displayName}
+            </span>
+          </div>
         </div>
       )}
 
       <h4 className={styles.title}>{task.title}</h4>
 
-      {task.description && <p className={styles.description}>{task.description}</p>}
+      {task.description && (
+        <p
+          className={styles.description}
+          dangerouslySetInnerHTML={{ __html: sanitizePreviewHtml(task.description) }}
+        />
+      )}
 
       {hasCustomBadges && (
         <div className={styles.customBadges}>
@@ -196,7 +260,7 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
         <div className={styles.meta}>
           <div className={styles.metaLeft}>
             {showDueDate && (
-              <span className={`${styles.metaItem} ${isOverdue && !taskCompleted ? styles.metaOverdue : ''}`}>
+              <span className={`${styles.metaItem} ${isOverdue && !taskCompleted && !taskRejected ? styles.metaOverdue : ''}`}>
                 <Calendar size={11} /> {format(parsedDueDate!, 'MMM d, yyyy')}
               </span>
             )}

@@ -86,6 +86,34 @@ export async function moveTask(
   await apiClient.patch(`/tasks/${taskId}/move`, input);
 }
 
+export interface BulkTaskResult {
+  moved?: number;
+  duplicated?: number;
+  affectedBoardIds: string[];
+}
+
+export async function bulkMoveTasks(
+  taskIds: string[],
+  targetColumnId: string,
+): Promise<BulkTaskResult> {
+  const response = await apiClient.post<ApiSuccessResponse<BulkTaskResult>>(
+    `/tasks/bulk-move`,
+    { taskIds, targetColumnId },
+  );
+  return response.data;
+}
+
+export async function bulkDuplicateTasks(
+  taskIds: string[],
+  targetColumnId: string,
+): Promise<BulkTaskResult> {
+  const response = await apiClient.post<ApiSuccessResponse<BulkTaskResult>>(
+    `/tasks/bulk-duplicate`,
+    { taskIds, targetColumnId },
+  );
+  return response.data;
+}
+
 export async function updateAssignees(
   taskId: string,
   input: UpdateTaskAssigneesInput,

@@ -22,6 +22,12 @@
   animation: slideUp var(--transition-slow);
 }
 
+.sizeSm { max-width: 380px; }
+.sizeMd { max-width: 480px; }
+.sizeLg { max-width: 720px; }
+.sizeXl { max-width: 960px; }
+.size2xl { max-width: 1400px; }
+
 .header {
   display: flex;
   align-items: center;

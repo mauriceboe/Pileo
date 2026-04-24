@@ -10,6 +10,7 @@ export const columns = sqliteTable('columns', {
   icon: text('icon'),
   position: integer('position').notNull().default(0),
   isCompleted: integer('is_completed', { mode: 'boolean' }).notNull().default(false),
+  isRejected: integer('is_rejected', { mode: 'boolean' }).notNull().default(false),
   taskLimit: integer('task_limit'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),

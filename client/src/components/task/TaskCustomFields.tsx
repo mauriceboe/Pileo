@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sliders } from 'lucide-react';
+import { Sliders, SlidersHorizontal } from 'lucide-react';
 import * as customFieldsApi from '../../api/custom-fields.api';
 import type { CustomField } from '../../api/custom-fields.api';
 import { CustomSelect } from '../ui/CustomSelect';
@@ -8,9 +8,20 @@ import styles from './task-custom-fields.module.css';
 interface TaskCustomFieldsProps {
   taskId: string;
   projectId: string;
+  headerClassName?: string;
+  headerIconClassName?: string;
+  headerTitleClassName?: string;
+  sectionClassName?: string;
 }
 
-export function TaskCustomFields({ taskId, projectId }: TaskCustomFieldsProps) {
+export function TaskCustomFields({
+  taskId,
+  projectId,
+  headerClassName,
+  headerIconClassName,
+  headerTitleClassName,
+  sectionClassName,
+}: TaskCustomFieldsProps) {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [values, setValues] = useState<Map<string, string>>(new Map());
   const [isLoaded, setIsLoaded] = useState(false);
@@ -43,7 +54,16 @@ export function TaskCustomFields({ taskId, projectId }: TaskCustomFieldsProps) {
   if (!isLoaded || fields.length === 0) return null;
 
   return (
-    <div className={styles.container}>
+    <div className={sectionClassName}>
+      {headerClassName && (
+        <div className={headerClassName}>
+          <span className={headerIconClassName}>
+            <SlidersHorizontal size={15} />
+          </span>
+          <h4 className={headerTitleClassName}>Custom Fields</h4>
+        </div>
+      )}
+      <div className={styles.container}>
       {fields.map((field) => {
         const value = values.get(field.id) ?? '';
 
@@ -97,6 +117,7 @@ export function TaskCustomFields({ taskId, projectId }: TaskCustomFieldsProps) {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

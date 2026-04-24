@@ -57,6 +57,7 @@ export function initializeDatabase(): void {
       icon TEXT,
       position INTEGER NOT NULL DEFAULT 0,
       is_completed INTEGER NOT NULL DEFAULT 0,
+      is_rejected INTEGER NOT NULL DEFAULT 0,
       task_limit INTEGER,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -172,6 +173,19 @@ export function initializeDatabase(): void {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      key_hash TEXT NOT NULL UNIQUE,
+      key_prefix TEXT NOT NULL,
+      last_used_at TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_api_keys_project ON api_keys(project_id);
+    CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
+
     CREATE TABLE IF NOT EXISTS session (
       sid TEXT PRIMARY KEY,
       sess TEXT NOT NULL,
@@ -229,6 +243,11 @@ export function initializeDatabase(): void {
   const taskColumns = sqlite.pragma('table_info(tasks)') as Array<{ name: string }>;
   if (!taskColumns.some((col) => col.name === 'rejected_at')) {
     sqlite.exec('ALTER TABLE tasks ADD COLUMN rejected_at TEXT');
+  }
+
+  const columnColumns = sqlite.pragma('table_info(columns)') as Array<{ name: string }>;
+  if (!columnColumns.some((col) => col.name === 'is_rejected')) {
+    sqlite.exec('ALTER TABLE columns ADD COLUMN is_rejected INTEGER NOT NULL DEFAULT 0');
   }
 
   logger.info('Database tables initialized');

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -10,7 +10,11 @@ import {
   useSensors,
   type CollisionDetection,
 } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
 import { useBoardStore } from '../../stores/board.store';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { Column } from './Column';
@@ -19,6 +23,7 @@ import { TaskCard } from './TaskCard';
 import { LiveCursors } from './LiveCursors';
 import { TaskDetail } from '../task/TaskDetail';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { BulkSelectionBar } from './BulkSelectionBar';
 import styles from './board-view.module.css';
 import columnStyles from './column.module.css';
 
@@ -27,14 +32,12 @@ export function BoardView() {
   const fetchTasks = useBoardStore((state) => state.fetchTasks);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Horizontal scroll with mouse wheel (unless hovering a scrollable task area)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY === 0 || el.scrollWidth <= el.clientWidth) return;
 
-      // Check if the mouse is over a vertically scrollable task area
       const target = e.target as HTMLElement | null;
       const taskArea = target?.closest(`.${columnStyles.taskArea}`) as HTMLElement | null;
       if (taskArea && taskArea.scrollHeight > taskArea.clientHeight) {
@@ -50,6 +53,7 @@ export function BoardView() {
 
   const {
     activeTask,
+    activeColumnDragId,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
@@ -65,7 +69,6 @@ export function BoardView() {
     }),
   );
 
-  // Use pointerWithin first (precise), fall back to rectIntersection (for columns)
   const collisionDetection: CollisionDetection = (args) => {
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) return pointerCollisions;
@@ -77,6 +80,20 @@ export function BoardView() {
       fetchTasks(board.id);
     }
   }, [board?.id, fetchTasks]);
+
+  const sortedColumns = useMemo(() => {
+    if (!board) return [];
+    return [...board.columns].sort((a, b) => a.position - b.position);
+  }, [board]);
+
+  const columnSortableIds = useMemo(
+    () => sortedColumns.map((column) => `col:${column.id}`),
+    [sortedColumns],
+  );
+
+  const activeColumnForOverlay = activeColumnDragId
+    ? sortedColumns.find((col) => col.id === activeColumnDragId)
+    : undefined;
 
   if (isLoading) {
     return (
@@ -96,10 +113,6 @@ export function BoardView() {
 
   if (!board) return null;
 
-  const sortedColumns = [...board.columns].sort(
-    (a, b) => a.position - b.position,
-  );
-
   return (
     <>
       <DndContext
@@ -111,21 +124,33 @@ export function BoardView() {
         onDragCancel={handleDragCancel}
       >
         <div ref={containerRef} className={styles.container}>
+          <SortableContext items={columnSortableIds} strategy={horizontalListSortingStrategy}>
             {sortedColumns.map((column) => (
               <Column key={column.id} column={column} />
             ))}
-            <AddColumnButton boardId={board.id} />
-            <LiveCursors containerRef={containerRef} />
-          </div>
+          </SortableContext>
+          <AddColumnButton boardId={board.id} />
+          <LiveCursors containerRef={containerRef} />
+        </div>
 
         <DragOverlay dropAnimation={null}>
           {activeTask ? (
             <TaskCard task={activeTask} isDragOverlay />
+          ) : activeColumnForOverlay ? (
+            <div className={styles.columnDragPreview}>
+              <div
+                className={styles.columnDragPreviewHeader}
+                style={{ backgroundColor: activeColumnForOverlay.color }}
+              >
+                {activeColumnForOverlay.name}
+              </div>
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>
 
       {isTaskDetailOpen && <TaskDetail />}
+      <BulkSelectionBar />
     </>
   );
 }

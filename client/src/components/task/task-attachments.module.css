@@ -10,12 +10,13 @@
   padding: var(--spacing-md);
   text-align: center;
   cursor: pointer;
+  background-color: var(--color-surface);
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .dropZone:hover {
   border-color: var(--color-primary);
-  background-color: var(--color-background);
+  background-color: var(--color-surface-hover);
 }
 
 .dropZoneActive {

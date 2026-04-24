@@ -3,7 +3,8 @@ import {
   Moon, Cloud, Flame, Music, Camera, Gift, Award, Bookmark, Bell, Globe,
   Lightbulb, Shield, Check, CheckCircle, Clock, Eye, Home, Inbox,
   Layers, Mail, Map, Megaphone, Palette, Play, Search, Send, Settings,
-  Smile, Sparkles, ThumbsUp, TrendingUp, Upload, Users,
+  Smile, Sparkles, ThumbsUp, TrendingUp, Upload, Users, CheckSquare, X,
+  GripVertical,
 } from 'lucide-react';
 import { Dropdown } from '../ui/Dropdown';
 import styles from './column-header.module.css';
@@ -27,8 +28,15 @@ interface ColumnHeaderProps {
   color: string;
   icon?: string | null;
   taskCount: number;
+  selectionMode?: boolean;
+  selectedCount?: number;
+  allSelected?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dragListeners?: any;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleSelectionMode?: () => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function ColumnHeader({
@@ -36,8 +44,14 @@ export function ColumnHeader({
   color,
   icon,
   taskCount,
+  selectionMode = false,
+  selectedCount = 0,
+  allSelected = false,
+  dragListeners,
   onEdit,
   onDelete,
+  onToggleSelectionMode,
+  onToggleSelectAll,
 }: ColumnHeaderProps) {
   const IconComponent = icon ? ICON_MAP[icon] : null;
 
@@ -46,6 +60,11 @@ export function ColumnHeader({
       label: 'Edit Column',
       icon: <Pencil size={14} />,
       onClick: onEdit,
+    },
+    {
+      label: 'Select Tasks',
+      icon: <CheckSquare size={14} />,
+      onClick: () => onToggleSelectionMode?.(),
     },
     'divider' as const,
     {
@@ -56,8 +75,43 @@ export function ColumnHeader({
     },
   ];
 
+  if (selectionMode) {
+    return (
+      <div className={`${styles.header} ${styles.selectionHeader}`} style={{ backgroundColor: color }}>
+        <button
+          className={styles.selectAllBtn}
+          onClick={onToggleSelectAll}
+          aria-label={allSelected ? 'Deselect all' : 'Select all'}
+          title={allSelected ? 'Deselect all' : 'Select all'}
+        >
+          <span className={`${styles.selectAllBox} ${allSelected ? styles.selectAllBoxOn : ''}`}>
+            {allSelected && <Check size={11} strokeWidth={3} />}
+          </span>
+        </button>
+        <div className={styles.titleGroup}>
+          <h3 className={styles.name}>{selectedCount} of {taskCount} selected</h3>
+        </div>
+        <button
+          className={styles.exitSelectBtn}
+          onClick={onToggleSelectionMode}
+          aria-label="Exit selection"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.header} style={{ backgroundColor: color }}>
+      <span
+        className={styles.dragHandle}
+        {...(dragListeners ?? {})}
+        aria-label="Drag column"
+        title="Drag to reorder"
+      >
+        <GripVertical size={14} />
+      </span>
       <div className={styles.titleGroup}>
         {IconComponent ? (
           <span className={styles.iconWrapper}>

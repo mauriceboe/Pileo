@@ -45,6 +45,7 @@ export {
   createTaskSchema,
   updateTaskSchema,
   moveTaskSchema,
+  bulkTaskOperationSchema,
   updateTaskAssigneesSchema,
   updateTaskLabelsSchema,
   taskAssigneeSchema,

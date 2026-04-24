@@ -15,6 +15,10 @@
   border-right-color: var(--color-border);
 }
 
+.columnSelecting {
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
 .taskArea {
   flex: 1;
   overflow-y: auto;
