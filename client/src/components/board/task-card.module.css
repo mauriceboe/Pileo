@@ -16,35 +16,23 @@
 .dragging { opacity: 0.3; }
 .dragOverlay { box-shadow: 0 8px 24px rgba(0,0,0,0.18); transform: rotate(1.5deg); cursor: grabbing; }
 
-.selectionMode { padding-left: 34px; cursor: pointer; }
-.selectionMode:hover { transform: none; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.selected {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+.selectionMode {
+  cursor: pointer;
+  transition: box-shadow 120ms ease, transform 120ms ease, outline-color 120ms ease;
 }
-[data-theme='dark'] .selected { box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); }
+.selectionMode:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-.selectCheckbox {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1.5px solid var(--color-border);
-  background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFF;
-  transition: all 120ms ease;
-  z-index: 1;
+.selected {
+  outline: 2.5px solid #22C55E;
+  outline-offset: -1px;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
 }
-.selectCheckboxOn {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+[data-theme='dark'] .selected {
+  outline-color: #4ADE80;
+  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.18);
 }
 
 /* Full-width banner — stretches across card top */

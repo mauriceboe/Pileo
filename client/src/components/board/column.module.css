@@ -8,6 +8,12 @@
   background-color: #FFFFFF;
   border-right: 1px solid #EBEDF0;
   overflow: hidden;
+  outline: none;
+}
+
+.column:focus,
+.column:focus-visible {
+  outline: none;
 }
 
 [data-theme='dark'] .column {
@@ -16,7 +22,7 @@
 }
 
 .columnSelecting {
-  box-shadow: inset 0 0 0 2px var(--color-primary);
+  outline: none;
 }
 
 .taskArea {

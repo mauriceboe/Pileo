@@ -53,23 +53,23 @@ export function BulkSelectionBar() {
         </div>
         <div className={styles.divider} />
         <Button
-          size="sm"
+          size="md"
           variant="secondary"
           disabled={!hasSelection}
           onClick={() => setPickerMode('move')}
         >
-          <ArrowRight size={14} /> Move to…
+          <ArrowRight size={14} /> Move to
         </Button>
         <Button
-          size="sm"
+          size="md"
           variant="secondary"
           disabled={!hasSelection}
           onClick={() => setPickerMode('duplicate')}
         >
-          <Copy size={14} /> Duplicate to…
+          <Copy size={14} /> Duplicate to
         </Button>
         <Button
-          size="sm"
+          size="md"
           variant="danger"
           disabled={!hasSelection}
           loading={isDeleting}

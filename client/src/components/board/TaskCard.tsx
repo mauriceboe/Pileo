@@ -8,7 +8,6 @@ import { useBoardStore } from '../../stores/board.store';
 import { useWebSocketStore } from '../../stores/websocket.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useSelectionStore } from '../../stores/selection.store';
-import { Check } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Avatar } from '../ui/Avatar';
 import { ContextMenu, type ContextMenuState } from '../ui/ContextMenu';
@@ -204,11 +203,6 @@ export function TaskCard({ task, isDragOverlay }: TaskCardProps) {
             },
           ]}
         />
-      )}
-      {selectionMode && (
-        <span className={`${styles.selectCheckbox} ${isSelected ? styles.selectCheckboxOn : ''}`} aria-hidden>
-          {isSelected && <Check size={12} strokeWidth={3} />}
-        </span>
       )}
       {/* Focus name tag — absolute top right */}
       {focusedByUser && (
