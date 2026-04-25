@@ -28,7 +28,12 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 export function createApp(): express.Application {
   const app = express();
 
-  if (env.PILEO_TRUST_PROXY) {
+  // Behind a TLS-terminating reverse proxy, Express needs to honour
+  // X-Forwarded-Proto so express-session sets the secure cookie. Default
+  // to enabled in production (where a proxy is the norm); explicit override
+  // via PILEO_TRUST_PROXY remains supported.
+  const trustProxy = env.PILEO_TRUST_PROXY ?? env.PILEO_NODE_ENV === 'production';
+  if (trustProxy) {
     app.set('trust proxy', 1);
   }
 
