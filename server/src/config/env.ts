@@ -17,7 +17,10 @@ const envSchema = z.object({
   PILEO_SESSION_MAX_AGE: z.coerce.number().int().positive().default(86400000), // 24h in ms
 
   PILEO_CORS_ORIGIN: z.string().default('http://localhost:5173'),
-  PILEO_TRUST_PROXY: z.coerce.boolean().default(false),
+  PILEO_TRUST_PROXY: z
+    .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
+    .transform((v) => v === 'true' || v === '1')
+    .optional(),
 
   PILEO_UPLOAD_DIR: z.string().default('./uploads'),
   PILEO_MAX_FILE_SIZE: z.coerce.number().int().positive().default(104857600), // 100MB
