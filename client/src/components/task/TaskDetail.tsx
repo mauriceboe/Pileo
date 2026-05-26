@@ -14,8 +14,13 @@ import {
   CheckCircle2,
   XCircle as XCircle2,
   Link,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useBoardStore } from '../../stores/board.store';
+import { listChecklistItems } from '../../api/checklists.api';
+import { listLinks } from '../../api/links.api';
+import { formatTaskMarkdown } from './formatTaskMarkdown';
 import { TaskDescription } from './TaskDescription';
 import { TaskDueDate } from './TaskDueDate';
 import { TaskLabels } from './TaskLabels';
@@ -42,6 +47,8 @@ export function TaskDetail() {
 
   const [title, setTitle] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,6 +100,35 @@ export function TaskDetail() {
     }
   };
 
+  useEffect(() => () => {
+    if (copyResetRef.current) clearTimeout(copyResetRef.current);
+  }, []);
+
+  const handleCopyMarkdown = async () => {
+    if (!selectedTask) return;
+    try {
+      // Checklist items and links live behind their own endpoints, so pull them
+      // alongside the already-loaded task before rendering the Markdown.
+      const [checklist, links] = await Promise.all([
+        listChecklistItems(selectedTask.id).catch(() => []),
+        listLinks(selectedTask.id).catch(() => []),
+      ]);
+      const markdown = formatTaskMarkdown({
+        task: selectedTask,
+        columnName: column?.name,
+        checklist,
+        links,
+      });
+      await navigator.clipboard.writeText(markdown);
+      setIsCopied(true);
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+      copyResetRef.current = setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      // Clipboard can be blocked (insecure context / denied permission) — leave
+      // the button state untouched so the user notices nothing happened.
+    }
+  };
+
   const isCompleted = selectedTask?.completedAt !== null && selectedTask?.completedAt !== undefined;
   const isRejected = (selectedTask as any)?.rejectedAt !== null && (selectedTask as any)?.rejectedAt !== undefined;
 
@@ -124,6 +160,17 @@ export function TaskDetail() {
               </div>
             )}
           </div>
+
+          <button
+            className={`${styles.copyButton} ${isCopied ? styles.copyButtonDone : ''}`}
+            onClick={handleCopyMarkdown}
+            aria-label="Copy task as Markdown"
+            title={isCopied ? 'Copied!' : 'Copy task as Markdown'}
+            type="button"
+            disabled={!selectedTask}
+          >
+            {isCopied ? <Check size={17} /> : <Copy size={17} />}
+          </button>
 
           <button
             className={styles.closeButton}
