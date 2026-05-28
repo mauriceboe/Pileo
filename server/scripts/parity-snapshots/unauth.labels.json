@@ -1,0 +1,13 @@
+{
+  "name": "unauth.labels",
+  "method": "GET",
+  "path": "/api/v1/projects/263ac5af-8c12-42c0-af32-9c13ade15e23/labels",
+  "anonymous": true,
+  "status": 401,
+  "body": {
+    "error": {
+      "code": "UNAUTHORIZED",
+      "message": "Authentication required"
+    }
+  }
+}

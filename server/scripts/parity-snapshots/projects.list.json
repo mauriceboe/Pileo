@@ -1,0 +1,35 @@
+{
+  "name": "projects.list",
+  "method": "GET",
+  "path": "/api/v1/projects",
+  "anonymous": false,
+  "status": 200,
+  "body": {
+    "data": [
+      {
+        "id": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "TREK",
+        "slug": "test",
+        "description": null,
+        "icon": "globe",
+        "backgroundImage": null,
+        "ownerId": "f6f6a56e-6265-4923-bef3-67613df2e42f",
+        "isArchived": false,
+        "createdAt": "<timestamp>",
+        "updatedAt": "<timestamp>"
+      },
+      {
+        "id": "d25d17ba-e4de-4622-9cde-da80f798fcd8",
+        "name": "ETSY",
+        "slug": "etsy",
+        "description": null,
+        "icon": "briefcase",
+        "backgroundImage": null,
+        "ownerId": "f6f6a56e-6265-4923-bef3-67613df2e42f",
+        "isArchived": false,
+        "createdAt": "<timestamp>",
+        "updatedAt": "<timestamp>"
+      }
+    ]
+  }
+}

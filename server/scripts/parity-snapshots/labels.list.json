@@ -1,0 +1,53 @@
+{
+  "name": "labels.list",
+  "method": "GET",
+  "path": "/api/v1/projects/263ac5af-8c12-42c0-af32-9c13ade15e23/labels",
+  "anonymous": false,
+  "status": 200,
+  "body": {
+    "data": [
+      {
+        "id": "65c00dca-b629-44b1-bd7d-07f3fd3e9818",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Bug",
+        "color": "#EF4444"
+      },
+      {
+        "id": "50233c90-a0f6-417d-ae60-d1aa8491e2fa",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Discord",
+        "color": "#78716C"
+      },
+      {
+        "id": "fedbff22-d2f8-4de0-8423-d5553f85712c",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Documentation",
+        "color": "#22C55E"
+      },
+      {
+        "id": "09831e3f-2752-4699-a053-213c37ceb262",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Feature Request",
+        "color": "#3B82F6"
+      },
+      {
+        "id": "c3928aa7-87a9-46b9-b262-a67817a62326",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Maintenability",
+        "color": "#8B5CF6"
+      },
+      {
+        "id": "f9a5b9db-e84d-4417-b2cb-aae1b232b7c9",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Pre-Release",
+        "color": "#1E293B"
+      },
+      {
+        "id": "df6ad565-9908-4d11-8f42-d7af60a4ab40",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Pull Request",
+        "color": "#EC4899"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "labels.unknownProject",
+  "method": "GET",
+  "path": "/api/v1/projects/00000000-0000-0000-0000-000000000000/labels",
+  "anonymous": false,
+  "status": 404,
+  "body": {
+    "error": {
+      "code": "NOT_FOUND",
+      "message": "Project with id '00000000-0000-0000-0000-000000000000' not found"
+    }
+  }
+}

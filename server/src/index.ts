@@ -9,7 +9,7 @@ import { sqlite } from './config/database.js';
 import { initializeDatabase } from './db/init.js';
 import { setupWebSocketServer } from './websocket/server.js';
 import { createNestApp } from './nest/bootstrap.js';
-import { compileMatchers } from './nest/dispatcher.js';
+import { compileMatchers, matches } from './nest/dispatcher.js';
 
 async function start(): Promise<void> {
   try {
@@ -39,7 +39,7 @@ async function start(): Promise<void> {
   // O(n) over a tiny array of pre-built regex.tests instead of re-parsing.
   const matchers = compileMatchers(nestPrefixes);
   dispatcher.use((req: Request, res: Response, next: NextFunction) => {
-    if (matchers.length > 0 && matchers.some((m) => m.test(req.path))) {
+    if (matches(matchers, req.path)) {
       nest.instance(req, res, next);
     } else {
       legacyApp(req, res, next);

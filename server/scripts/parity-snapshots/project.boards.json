@@ -1,0 +1,35 @@
+{
+  "name": "project.boards",
+  "method": "GET",
+  "path": "/api/v1/projects/263ac5af-8c12-42c0-af32-9c13ade15e23/boards",
+  "anonymous": false,
+  "status": 200,
+  "body": {
+    "data": [
+      {
+        "id": "441f3a3a-d1ce-48e2-8528-36c0be467dc4",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Features &  Bugs",
+        "position": 0,
+        "createdAt": "<timestamp>",
+        "updatedAt": "<timestamp>"
+      },
+      {
+        "id": "e253b85a-1a8c-43a2-9efe-eba90f53861d",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "May Refactor",
+        "position": 1,
+        "createdAt": "<timestamp>",
+        "updatedAt": "<timestamp>"
+      },
+      {
+        "id": "3b2b0d92-8778-45be-aa04-a8264b8a5b1e",
+        "projectId": "263ac5af-8c12-42c0-af32-9c13ade15e23",
+        "name": "Brownfield Rewrite",
+        "position": 2,
+        "createdAt": "<timestamp>",
+        "updatedAt": "<timestamp>"
+      }
+    ]
+  }
+}

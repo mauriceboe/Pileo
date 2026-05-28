@@ -38,8 +38,8 @@ export function compileMatchers(patterns: readonly string[]): CompiledMatcher[] 
   return matchers;
 }
 
-export function pathBelongsToNest(reqPath: string, patterns: readonly string[]): boolean {
-  for (const m of compileMatchers(patterns)) {
+export function matches(matchers: readonly CompiledMatcher[], reqPath: string): boolean {
+  for (const m of matchers) {
     if (m.test(reqPath)) return true;
   }
   return false;
