@@ -1,8 +1,9 @@
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, LogOut, Plug } from 'lucide-react';
 import { useUiStore } from '../../stores/ui.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate } from 'react-router-dom';
 import { Dialog } from './Dialog';
+import { ConnectedApplications } from '../settings/ConnectedApplications';
 import styles from './settings-dialog.module.css';
 
 interface SettingsDialogProps {
@@ -43,6 +44,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               Dark
             </button>
           </div>
+        </div>
+
+        <div className={styles.divider} />
+
+        {/* Connected applications (OAuth 2.1 / MCP) */}
+        <div className={styles.section}>
+          <span className={styles.sectionLabel}>
+            <Plug size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+            Connected applications
+          </span>
+          <ConnectedApplications />
         </div>
 
         <div className={styles.divider} />

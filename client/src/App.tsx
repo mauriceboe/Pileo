@@ -9,7 +9,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { BoardPage } from './pages/BoardPage';
 import { ProjectBoardsPage } from './pages/ProjectBoardsPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -38,7 +37,6 @@ export function App() {
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:projectId/boards" element={<ProjectBoardsPage />} />
             <Route path="/projects/:projectId/boards/:boardId" element={<BoardPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
