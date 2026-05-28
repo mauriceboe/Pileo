@@ -19,6 +19,7 @@ import { AdminModule } from './admin/admin.module.js';
 import { ShareModule } from './share/share.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { SessionAuthModule } from './auth/session-auth.module.js';
+import { OauthModule } from './oauth/oauth.module.js';
 
 // Root NestJS module. Domain modules get added one at a time via the
 // strangler-fig migration (see pileo-rewrite.md). DatabaseModule is @Global
@@ -45,6 +46,7 @@ import { SessionAuthModule } from './auth/session-auth.module.js';
     ShareModule,
     TasksModule,
     SessionAuthModule,
+    OauthModule,
   ],
 })
 export class AppModule {}

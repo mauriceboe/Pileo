@@ -2,52 +2,71 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter, type NestExpressApplication } from '@nestjs/platform-express';
 import express from 'express';
-import type { Express } from 'express';
+import type { Express, Request, Response } from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import pinoHttp from 'pino-http';
 import { AppModule } from './app.module.js';
 import { AppErrorFilter } from './error/app-error.filter.js';
 import { createSessionMiddleware } from '../config/session.js';
+import { createHelmetMiddleware, createCorsMiddleware } from '../middleware/security.middleware.js';
+import { logger } from '../config/logger.js';
+import { env } from '../config/env.js';
 
 export interface NestHandle {
   instance: Express;
   close: () => Promise<void>;
 }
 
-// Build a NestJS app on top of a fresh Express instance.
-// The instance is returned (not listen()'d) so the top-level dispatcher in
-// index.ts can decide per-prefix which app handles each request.
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+
+// Top-level NestJS app. This is the only HTTP handler now — the legacy
+// Express stack has been retired.
 export async function createNestApp(): Promise<NestHandle> {
   const expressInstance = express();
+
+  // Behind a TLS-terminating reverse proxy, we need X-Forwarded-Proto so
+  // express-session can set secure cookies. Default to on in production.
+  const trustProxy = env.PILEO_TRUST_PROXY ?? env.PILEO_NODE_ENV === 'production';
+  if (trustProxy) expressInstance.set('trust proxy', 1);
+  expressInstance.disable('x-powered-by');
+
+  // Health endpoint sits in front of Nest so container probes don't
+  // depend on the Nest boot completing.
+  expressInstance.get('/api/health', (_req: Request, res: Response) => {
+    res.json({ status: 'ok', version: '1.0.0' });
+  });
+
+  expressInstance.use(createHelmetMiddleware());
+  expressInstance.use(createCorsMiddleware());
+  expressInstance.use(pinoHttp({ logger }));
+  expressInstance.use(createSessionMiddleware());
+  expressInstance.use('/uploads', express.static(path.resolve(env.PILEO_UPLOAD_DIR)));
+
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(expressInstance),
-    {
-      logger: ['error', 'warn', 'log'],
-      // bodyParser:true so @Body() controllers see a parsed body without
-      // each module having to install its own json middleware. The dispatcher
-      // in index.ts only forwards requests with raw bodies to one app or the
-      // other — there is no double-parse with legacy Express, which parses
-      // separately on its own instance.
-      bodyParser: true,
-    },
+    { logger: ['error', 'warn', 'log'], bodyParser: true },
   );
 
-  // Global filter — keeps the wire envelope identical to legacy Express
-  // for every Nest-handled route.
   app.useGlobalFilters(new AppErrorFilter());
-
-  // express-session must live on the Nest instance too — both halves share
-  // the same SqliteSessionStore + the same secret + cookie name, so the
-  // browser's pileo.sid cookie resolves to req.session on either side.
-  // Without this, every Nest route would 401 anonymous browser traffic
-  // (only Bearer-token requests would work).
-  expressInstance.set('trust proxy', 1);
-  expressInstance.use(createSessionMiddleware());
-
-  // Global filter — keeps the wire envelope identical to legacy Express
-  // for every Nest-handled route.
-  app.useGlobalFilters(new AppErrorFilter());
-
   await app.init();
+
+  // SPA fallback in production. Registered AFTER Nest so controllers own
+  // /api/*, /.well-known/* and /uploads/*; everything else falls through
+  // to index.html.
+  if (env.PILEO_NODE_ENV === 'production') {
+    const clientDist = path.join(currentDir, '../../../client/dist');
+    expressInstance.use(express.static(clientDist));
+    expressInstance.get('*', (req: Request, res: Response, next) => {
+      if (req.path.startsWith('/api/') || req.path.startsWith('/.well-known/')) {
+        next();
+        return;
+      }
+      res.sendFile(path.join(clientDist, 'index.html'));
+    });
+  }
+
   return {
     instance: expressInstance,
     close: () => app.close(),

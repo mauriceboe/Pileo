@@ -35,14 +35,6 @@ const envSchema = z.object({
 
   PILEO_RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(900000), // 15min
   PILEO_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
-
-  // Comma-separated path prefixes routed to the NestJS app instead of legacy
-  // Express. Default empty = every request goes to legacy (safe rollback).
-  // Example: "/api/v1/mcp,/api/v1/labels"
-  PILEO_NEST_PREFIXES: z
-    .string()
-    .default('')
-    .transform((s) => s.split(',').map((p) => p.trim()).filter(Boolean)),
 });
 
 export type Env = z.infer<typeof envSchema>;
