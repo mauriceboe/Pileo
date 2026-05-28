@@ -7,6 +7,8 @@ import { ActivityModule } from './activity/activity.module.js';
 import { LinksModule } from './links/links.module.js';
 import { ApiKeysModule } from './api-keys/api-keys.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
+import { CommentsModule } from './comments/comments.module.js';
+import { ChecklistsModule } from './checklists/checklists.module.js';
 
 // Root NestJS module. Domain modules get added one at a time via the
 // strangler-fig migration (see pileo-rewrite.md). DatabaseModule is @Global
@@ -21,6 +23,8 @@ import { NotificationsModule } from './notifications/notifications.module.js';
     LinksModule,
     ApiKeysModule,
     NotificationsModule,
+    CommentsModule,
+    ChecklistsModule,
   ],
 })
 export class AppModule {}
