@@ -5,6 +5,7 @@ import express from 'express';
 import type { Express } from 'express';
 import { AppModule } from './app.module.js';
 import { AppErrorFilter } from './error/app-error.filter.js';
+import { createSessionMiddleware } from '../config/session.js';
 
 export interface NestHandle {
   instance: Express;
@@ -29,6 +30,18 @@ export async function createNestApp(): Promise<NestHandle> {
       bodyParser: true,
     },
   );
+
+  // Global filter — keeps the wire envelope identical to legacy Express
+  // for every Nest-handled route.
+  app.useGlobalFilters(new AppErrorFilter());
+
+  // express-session must live on the Nest instance too — both halves share
+  // the same SqliteSessionStore + the same secret + cookie name, so the
+  // browser's pileo.sid cookie resolves to req.session on either side.
+  // Without this, every Nest route would 401 anonymous browser traffic
+  // (only Bearer-token requests would work).
+  expressInstance.set('trust proxy', 1);
+  expressInstance.use(createSessionMiddleware());
 
   // Global filter — keeps the wire envelope identical to legacy Express
   // for every Nest-handled route.
