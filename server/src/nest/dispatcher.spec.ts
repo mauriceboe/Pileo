@@ -36,4 +36,26 @@ describe('pathBelongsToNest', () => {
   it('is case-sensitive (HTTP paths are case-sensitive per RFC 3986)', () => {
     expect(pathBelongsToNest('/api/v1/MCP', ['/api/v1/mcp'])).toBe(false);
   });
+
+  // --- glob patterns (added for Labels — single * = one path segment) ---
+
+  it('glob pattern matches a single segment', () => {
+    expect(pathBelongsToNest('/api/v1/projects/abc/labels', ['/api/v1/projects/*/labels'])).toBe(true);
+  });
+
+  it('glob pattern matches children of the matched segment', () => {
+    expect(pathBelongsToNest('/api/v1/projects/abc/labels/xyz', ['/api/v1/projects/*/labels'])).toBe(true);
+  });
+
+  it('glob * is single-segment, does not eat slashes', () => {
+    expect(pathBelongsToNest('/api/v1/projects/abc/def/labels', ['/api/v1/projects/*/labels'])).toBe(false);
+  });
+
+  it('glob does not match a sibling resource', () => {
+    expect(pathBelongsToNest('/api/v1/projects/abc/boards', ['/api/v1/projects/*/labels'])).toBe(false);
+  });
+
+  it('glob requires the segment to be present (not empty)', () => {
+    expect(pathBelongsToNest('/api/v1/projects//labels', ['/api/v1/projects/*/labels'])).toBe(false);
+  });
 });

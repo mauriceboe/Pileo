@@ -9,7 +9,7 @@ import { sqlite } from './config/database.js';
 import { initializeDatabase } from './db/init.js';
 import { setupWebSocketServer } from './websocket/server.js';
 import { createNestApp } from './nest/bootstrap.js';
-import { pathBelongsToNest } from './nest/dispatcher.js';
+import { compileMatchers } from './nest/dispatcher.js';
 
 async function start(): Promise<void> {
   try {
@@ -35,8 +35,11 @@ async function start(): Promise<void> {
   dispatcher.disable('x-powered-by');
 
   const nestPrefixes = env.PILEO_NEST_PREFIXES;
+  // Compile pattern matchers once at startup — request-time matching is then
+  // O(n) over a tiny array of pre-built regex.tests instead of re-parsing.
+  const matchers = compileMatchers(nestPrefixes);
   dispatcher.use((req: Request, res: Response, next: NextFunction) => {
-    if (nestPrefixes.length > 0 && pathBelongsToNest(req.path, nestPrefixes)) {
+    if (matchers.length > 0 && matchers.some((m) => m.test(req.path))) {
       nest.instance(req, res, next);
     } else {
       legacyApp(req, res, next);

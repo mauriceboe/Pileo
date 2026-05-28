@@ -4,6 +4,7 @@ import { ExpressAdapter, type NestExpressApplication } from '@nestjs/platform-ex
 import express from 'express';
 import type { Express } from 'express';
 import { AppModule } from './app.module.js';
+import { AppErrorFilter } from './error/app-error.filter.js';
 
 export interface NestHandle {
   instance: Express;
@@ -23,6 +24,10 @@ export async function createNestApp(): Promise<NestHandle> {
       bodyParser: false,
     },
   );
+
+  // Global filter — keeps the wire envelope identical to legacy Express
+  // for every Nest-handled route.
+  app.useGlobalFilters(new AppErrorFilter());
 
   await app.init();
   return {
