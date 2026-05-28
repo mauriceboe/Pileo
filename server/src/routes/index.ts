@@ -17,6 +17,7 @@ import { adminRoutes } from './admin.routes.js';
 import { shareRouter } from './share.routes.js';
 import { projectCustomFieldRouter, customFieldRouter, taskCustomValueRouter } from './custom-field.routes.js';
 import { projectApiKeyRouter, apiKeyRouter } from './api-key.routes.js';
+import { oauthRoutes } from './oauth.routes.js';
 
 
 export function registerRoutes(): Router {
@@ -52,6 +53,7 @@ export function registerRoutes(): Router {
   router.use('/projects/:projectId/api-keys', projectApiKeyRouter);
   router.use('/api-keys', apiKeyRouter);
   router.use('/admin', adminRoutes);
+  router.use('/oauth', oauthRoutes);
   router.use('/', shareRouter);
 
   return router;

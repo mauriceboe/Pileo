@@ -232,6 +232,53 @@ export function initializeDatabase(): void {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_share_tokens_token ON share_tokens(token);
+
+    -- OAuth 2.1 — registered MCP clients (claude.ai connector etc.).
+    -- client_secret_hash is NULL for public clients (PKCE-only).
+    CREATE TABLE IF NOT EXISTS oauth_clients (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      client_secret_hash TEXT,
+      redirect_uris TEXT NOT NULL,
+      is_public INTEGER NOT NULL DEFAULT 1,
+      created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_oauth_clients_created_by ON oauth_clients(created_by);
+
+    -- Authorization codes — single-use, ~10min TTL, PKCE-required.
+    CREATE TABLE IF NOT EXISTS oauth_codes (
+      code TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      redirect_uri TEXT NOT NULL,
+      code_challenge TEXT NOT NULL,
+      code_challenge_method TEXT NOT NULL DEFAULT 'S256',
+      scopes TEXT NOT NULL,
+      audience TEXT,
+      expires_at TEXT NOT NULL,
+      consumed_at TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_oauth_codes_expires ON oauth_codes(expires_at);
+
+    -- Access + refresh tokens. We store only SHA-256 hashes so a DB leak
+    -- does not yield usable bearer tokens.
+    CREATE TABLE IF NOT EXISTS oauth_access_tokens (
+      token_hash TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      scopes TEXT NOT NULL,
+      audience TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      refresh_token_hash TEXT UNIQUE,
+      refresh_expires_at TEXT,
+      revoked_at TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_oauth_tokens_user ON oauth_access_tokens(user_id);
+    CREATE INDEX IF NOT EXISTS idx_oauth_tokens_refresh ON oauth_access_tokens(refresh_token_hash);
+    CREATE INDEX IF NOT EXISTS idx_oauth_tokens_expires ON oauth_access_tokens(expires_at);
     CREATE INDEX IF NOT EXISTS idx_share_tokens_board ON share_tokens(board_id);
   `);
 

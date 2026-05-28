@@ -1,0 +1,219 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.description {
+  margin: 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.loading {
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+/* --- newly created secret banner --- */
+.secretBanner {
+  border: 1px solid var(--accent-border, #818cf8);
+  background: var(--accent-tint, rgba(79, 70, 229, 0.08));
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.secretHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary, #0f172a);
+  font-size: 13px;
+}
+.secretRow {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+.secretLabel {
+  color: var(--text-secondary, #64748b);
+  font-size: 12px;
+}
+.secretValue {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: var(--surface-2, rgba(15, 23, 42, 0.06));
+  padding: 6px 8px;
+  border-radius: 6px;
+  overflow-x: auto;
+  word-break: break-all;
+}
+
+/* --- client list --- */
+.clientList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.clientRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--surface, #ffffff);
+}
+.clientIconWrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-2, rgba(15, 23, 42, 0.06));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #64748b);
+}
+.clientInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.clientName {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary, #0f172a);
+}
+.clientMeta {
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+}
+.clientUri {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--text-secondary, #64748b);
+  background: var(--surface-2, rgba(15, 23, 42, 0.04));
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.revokeButton {
+  background: transparent;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  padding: 6px;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.revokeButton:hover {
+  color: var(--danger, #ef4444);
+  border-color: var(--danger, #ef4444);
+}
+
+/* --- copy button --- */
+.copyButton {
+  background: transparent;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #64748b);
+}
+.copyButton:hover {
+  color: var(--accent, #4F46E5);
+}
+
+/* --- add form --- */
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed var(--border, #e2e8f0);
+  border-radius: 10px;
+}
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.checkboxRow input {
+  margin-top: 3px;
+}
+.checkboxLabel {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary, #0f172a);
+}
+.fieldHint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+}
+.checkboxHint {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+  margin-top: 2px;
+}
+.error {
+  color: var(--danger, #ef4444);
+  font-size: 12px;
+  margin: 0;
+}
+.addActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* --- docs block --- */
+.docsBlock {
+  border-top: 1px solid var(--border, #e2e8f0);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+.docsTitle {
+  font-size: 13px;
+  margin: 0 0 8px;
+  color: var(--text-primary, #0f172a);
+}
+.docsList {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.docsList code {
+  background: var(--surface-2, rgba(15, 23, 42, 0.06));
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Dark mode tweaks via prefers-color-scheme; Pileo's design tokens take
+   precedence when defined globally. */
+:global(.dark) .clientRow {
+  background: var(--surface, #1e293b);
+}

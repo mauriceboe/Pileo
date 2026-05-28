@@ -42,6 +42,18 @@ export function createApp(): express.Application {
     res.json({ status: 'ok', version: '1.0.0' });
   });
 
+  // OAuth discovery (RFC 8414 + 9728) lives at the well-known URI on the
+  // origin, NOT under /api/v1. The handlers proxy to the actual handlers
+  // mounted in registerRoutes() so the JSON stays in one place.
+  app.get('/.well-known/oauth-authorization-server', (req, res, next) => {
+    req.url = '/api/v1/oauth/discovery/authorization-server';
+    app(req, res, next);
+  });
+  app.get('/.well-known/oauth-protected-resource/api/v1/mcp', (req, res, next) => {
+    req.url = '/api/v1/oauth/discovery/protected-resource';
+    app(req, res, next);
+  });
+
   app.use(createHelmetMiddleware());
   app.use(createCorsMiddleware());
   app.use(express.json({ limit: '1mb' }));

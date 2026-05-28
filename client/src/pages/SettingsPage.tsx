@@ -12,8 +12,10 @@ import {
   Lock,
   AlertTriangle,
   Trash2,
+  Plug,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { ConnectedApplications } from '../components/settings/ConnectedApplications';
 import styles from './settings-page.module.css';
 
 interface ToggleSwitchProps {
@@ -265,6 +267,24 @@ export function SettingsPage() {
                 Update
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* Connected applications (OAuth 2.1) */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={`${styles.sectionIconWrapper} ${styles.sectionIconBlue}`}>
+              <Plug size={18} />
+            </div>
+            <div>
+              <h2 className={styles.sectionTitle}>Connected applications</h2>
+              <p className={styles.sectionDescription}>
+                Manage OAuth clients that access your Pileo data on your behalf
+              </p>
+            </div>
+          </div>
+          <div className={styles.card}>
+            <ConnectedApplications />
           </div>
         </section>
 

@@ -50,9 +50,14 @@ export class McpController {
   async handle(@Req() req: Request, @Res() res: Response): Promise<void> {
     const auth = await authenticateMcpRequest(req);
     if (!auth) {
+      // RFC 9728: point clients at the protected-resource metadata so they
+      // can discover the authorization server without out-of-band config.
+      const proto = (req.headers['x-forwarded-proto'] as string | undefined) ?? req.protocol;
+      const host = (req.headers['x-forwarded-host'] as string | undefined) ?? req.headers['host'];
+      const resourceMeta = `${proto}://${host}/.well-known/oauth-protected-resource/api/v1/mcp`;
       res.setHeader(
         'WWW-Authenticate',
-        'Bearer realm="Pileo MCP", error="invalid_token"',
+        `Bearer realm="Pileo MCP", resource_metadata="${resourceMeta}", error="invalid_token"`,
       );
       res.status(HttpStatus.UNAUTHORIZED).json({
         error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
