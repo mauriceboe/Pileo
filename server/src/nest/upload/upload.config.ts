@@ -63,27 +63,26 @@ const storage = multer.diskStorage({
   filename: (_req, file, cb) => cb(null, `${randomUUID()}${path.extname(file.originalname).toLowerCase()}`),
 });
 
-function fileFilter(_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback): void {
+// Matches Nest's MulterOptions.fileFilter signature exactly (error param
+// is Error|null, not just Error like multer's own type), so no cast needed.
+const fileFilter: MulterOptions['fileFilter'] = (_req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase().slice(1);
   if (!ALLOWED_EXTENSIONS.has(ext)) {
-    cb(new ValidationError('File type not allowed'));
+    cb(new ValidationError('File type not allowed'), false);
     return;
   }
   const mimeAllowed =
     ALLOWED_MIME_TYPES.has(file.mimetype) ||
     (BINARY_FALLBACK_EXTENSIONS.has(ext) && BINARY_FALLBACK_MIME_TYPES.has(file.mimetype));
   if (!mimeAllowed) {
-    cb(new ValidationError('File type not allowed'));
+    cb(new ValidationError('File type not allowed'), false);
     return;
   }
   cb(null, true);
-}
+};
 
-// Cast through unknown because Nest's MulterOptions widens FileFilterCallback's
-// "error" param to Error|null while multer's own type is stricter — the
-// runtime callback shape is identical so the cast is safe.
-export const uploadOptions = {
+export const uploadOptions: MulterOptions = {
   storage,
   fileFilter,
   limits: { fileSize: env.PILEO_MAX_FILE_SIZE },
-} as unknown as MulterOptions;
+};
