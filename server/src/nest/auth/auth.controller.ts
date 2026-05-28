@@ -55,7 +55,10 @@ export class AuthController {
     return { data: user };
   }
 
+  // Nest defaults POST to 201 CREATED; legacy login returns 200, so we
+  // pin the status explicitly here (and on forgot/reset-password below).
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(
     @Body(new ZodValidationPipe(loginSchema)) body: LoginInput,
     @Req() req: Request,
@@ -71,6 +74,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
   async forgotPassword(
     @Body(new ZodValidationPipe(forgotPasswordSchema)) body: ForgotPasswordInput,
   ): Promise<{ data: { message: string } }> {
@@ -79,6 +83,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
   async resetPassword(
     @Body(new ZodValidationPipe(resetPasswordSchema)) body: ResetPasswordInput,
   ): Promise<{ data: { message: string } }> {
