@@ -4,25 +4,55 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // individual tests can stub return values and assert call shapes.
 vi.mock('../../services/project.service.js', () => ({
   list: vi.fn(),
+  create: vi.fn(),
 }));
 vi.mock('../../services/board.service.js', () => ({
   list: vi.fn(),
   getById: vi.fn(),
+  create: vi.fn(),
+  remove: vi.fn(),
 }));
 vi.mock('../../services/task.service.js', () => ({
   list: vi.fn(),
   getById: vi.fn(),
   move: vi.fn(),
   update: vi.fn(),
+  create: vi.fn(),
+  remove: vi.fn(),
+  updateAssignees: vi.fn(),
+  updateLabels: vi.fn(),
 }));
 vi.mock('../../services/comment.service.js', () => ({
   create: vi.fn(),
+}));
+vi.mock('../../services/label.service.js', () => ({
+  list: vi.fn(),
+  create: vi.fn(),
+}));
+vi.mock('../../services/link.service.js', () => ({
+  create: vi.fn(),
+  remove: vi.fn(),
+}));
+vi.mock('../../services/checklist.service.js', () => ({
+  create: vi.fn(),
+  update: vi.fn(),
+  remove: vi.fn(),
+}));
+vi.mock('../../services/custom-field.service.js', () => ({
+  listFields: vi.fn(),
+  createField: vi.fn(),
+  updateField: vi.fn(),
+  setTaskValue: vi.fn(),
 }));
 
 import * as projectService from '../../services/project.service.js';
 import * as boardService from '../../services/board.service.js';
 import * as taskService from '../../services/task.service.js';
 import * as commentService from '../../services/comment.service.js';
+import * as labelService from '../../services/label.service.js';
+import * as linkService from '../../services/link.service.js';
+import * as checklistService from '../../services/checklist.service.js';
+import * as customFieldService from '../../services/custom-field.service.js';
 import { registerTools } from './tools.js';
 
 // Minimal MCP server stand-in. We only care about capturing tool
@@ -62,15 +92,34 @@ describe('MCP tools', () => {
     tools = cap.tools;
   });
 
-  it('registers exactly the eight expected tools', () => {
+  it('registers the full expected tool set', () => {
     expect([...tools.keys()].sort()).toEqual([
+      'add_checklist_item',
       'add_comment',
+      'add_link',
+      'create_board',
+      'create_custom_field',
+      'create_label',
+      'create_project',
+      'create_task',
+      'delete_board',
+      'delete_checklist_item',
+      'delete_link',
+      'delete_task',
       'get_board',
       'get_task',
       'list_boards',
+      'list_custom_fields',
+      'list_labels',
       'list_projects',
       'list_tasks_grouped',
       'move_task',
+      'set_task_assignees',
+      'set_task_custom_value',
+      'set_task_labels',
+      'toggle_checklist_item',
+      'update_checklist_item',
+      'update_custom_field',
       'update_task',
     ]);
   });
@@ -144,5 +193,109 @@ describe('MCP tools', () => {
   it('propagates service errors to the caller (no swallowing)', async () => {
     vi.mocked(projectService.list).mockRejectedValue(new Error('db down'));
     await expect(tools.get('list_projects')!.handler({})).rejects.toThrow('db down');
+  });
+
+  // --- New write tools (expanded surface) -------------------------------
+
+  it('create_project forwards compacted body + userId', async () => {
+    vi.mocked(projectService.create).mockResolvedValue({ id: 'p1' } as never);
+    await tools.get('create_project')!.handler({ name: 'Pileo', icon: 'rocket' });
+    expect(projectService.create).toHaveBeenCalledWith({ name: 'Pileo', icon: 'rocket' }, USER_ID);
+  });
+
+  it('create_board forwards (projectId, userId, { name })', async () => {
+    vi.mocked(boardService.create).mockResolvedValue({ id: 'b1' } as never);
+    await tools.get('create_board')!.handler({ projectId: 'p1', name: 'Sprint 1' });
+    expect(boardService.create).toHaveBeenCalledWith('p1', USER_ID, { name: 'Sprint 1' });
+  });
+
+  it('delete_board confirms by returning { deleted: id }', async () => {
+    vi.mocked(boardService.remove).mockResolvedValue(undefined as never);
+    const r = await tools.get('delete_board')!.handler({ boardId: 'b1' });
+    expect(boardService.remove).toHaveBeenCalledWith('b1', USER_ID);
+    expect(JSON.parse(textOf(r))).toEqual({ deleted: 'b1' });
+  });
+
+  it('create_task strips undefined keys before delegating', async () => {
+    vi.mocked(taskService.create).mockResolvedValue({ id: 't1' } as never);
+    await tools.get('create_task')!.handler({
+      columnId: 'c1',
+      title: 'Bug',
+      description: undefined,
+      priority: 'high',
+    });
+    expect(taskService.create).toHaveBeenCalledWith('c1', USER_ID, { title: 'Bug', priority: 'high' });
+  });
+
+  it('delete_task confirms', async () => {
+    vi.mocked(taskService.remove).mockResolvedValue(undefined as never);
+    const r = await tools.get('delete_task')!.handler({ taskId: 't1' });
+    expect(taskService.remove).toHaveBeenCalledWith('t1', USER_ID);
+    expect(JSON.parse(textOf(r))).toEqual({ deleted: 't1' });
+  });
+
+  it('set_task_assignees forwards { add, remove }', async () => {
+    vi.mocked(taskService.updateAssignees).mockResolvedValue({ id: 't1' } as never);
+    await tools.get('set_task_assignees')!.handler({ taskId: 't1', add: ['u1'], remove: ['u2'] });
+    expect(taskService.updateAssignees).toHaveBeenCalledWith('t1', USER_ID, { add: ['u1'], remove: ['u2'] });
+  });
+
+  it('set_task_labels forwards { add, remove }', async () => {
+    vi.mocked(taskService.updateLabels).mockResolvedValue({ id: 't1' } as never);
+    await tools.get('set_task_labels')!.handler({ taskId: 't1', add: ['l1'], remove: [] });
+    expect(taskService.updateLabels).toHaveBeenCalledWith('t1', USER_ID, { add: ['l1'], remove: [] });
+  });
+
+  it('create_label forwards (projectId, userId, { name, color })', async () => {
+    vi.mocked(labelService.create).mockResolvedValue({ id: 'l1' } as never);
+    await tools.get('create_label')!.handler({ projectId: 'p1', name: 'Bug', color: '#EF4444' });
+    expect(labelService.create).toHaveBeenCalledWith('p1', USER_ID, { name: 'Bug', color: '#EF4444' });
+  });
+
+  it('add_link delegates to linkService.create', async () => {
+    vi.mocked(linkService.create).mockResolvedValue({ id: 'lk1' } as never);
+    await tools.get('add_link')!.handler({ taskId: 't1', url: 'https://x.test' });
+    expect(linkService.create).toHaveBeenCalledWith('t1', USER_ID, 'https://x.test');
+  });
+
+  it('toggle_checklist_item flips isCompleted via service.update', async () => {
+    vi.mocked(checklistService.update).mockResolvedValue({ id: 'i1' } as never);
+    await tools.get('toggle_checklist_item')!.handler({ itemId: 'i1', isCompleted: true });
+    expect(checklistService.update).toHaveBeenCalledWith('i1', USER_ID, { isCompleted: true });
+  });
+
+  it('update_checklist_item with both fields forwards compacted patch', async () => {
+    vi.mocked(checklistService.update).mockResolvedValue({ id: 'i1' } as never);
+    await tools.get('update_checklist_item')!.handler({ itemId: 'i1', title: 'renamed' });
+    expect(checklistService.update).toHaveBeenCalledWith('i1', USER_ID, { title: 'renamed' });
+  });
+
+  it('create_custom_field forwards data as-is to the sync service', async () => {
+    vi.mocked(customFieldService.createField).mockReturnValue({ id: 'f1' } as never);
+    await tools.get('create_custom_field')!.handler({
+      projectId: 'p1',
+      name: 'Workload',
+      type: 'dropdown',
+      options: ['low', 'high'],
+      showOnCard: true,
+    });
+    expect(customFieldService.createField).toHaveBeenCalledWith('p1', {
+      name: 'Workload',
+      type: 'dropdown',
+      options: ['low', 'high'],
+      showOnCard: true,
+    });
+  });
+
+  it('update_custom_field strips undefined before delegating', async () => {
+    vi.mocked(customFieldService.updateField).mockReturnValue({ id: 'f1', isEnabled: false } as never);
+    await tools.get('update_custom_field')!.handler({ fieldId: 'f1', isEnabled: false });
+    expect(customFieldService.updateField).toHaveBeenCalledWith('f1', { isEnabled: false });
+  });
+
+  it('set_task_custom_value forwards (taskId, fieldId, value)', async () => {
+    vi.mocked(customFieldService.setTaskValue).mockReturnValue({ id: 'v1' } as never);
+    await tools.get('set_task_custom_value')!.handler({ taskId: 't1', fieldId: 'f1', value: 'high' });
+    expect(customFieldService.setTaskValue).toHaveBeenCalledWith('t1', 'f1', 'high');
   });
 });
