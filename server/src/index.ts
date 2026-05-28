@@ -1,14 +1,18 @@
+import 'reflect-metadata';
 import { createServer } from 'node:http';
+import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { createApp } from './app.js';
 import { sqlite } from './config/database.js';
 import { initializeDatabase } from './db/init.js';
 import { setupWebSocketServer } from './websocket/server.js';
+import { createNestApp } from './nest/bootstrap.js';
+import { pathBelongsToNest } from './nest/dispatcher.js';
 
 async function start(): Promise<void> {
   try {
-    // Verify the database is accessible
     sqlite.pragma('integrity_check');
     logger.info('Database connection established');
     initializeDatabase();
@@ -17,14 +21,39 @@ async function start(): Promise<void> {
     process.exit(1);
   }
 
-  const app = createApp();
-  const server = createServer(app);
+  const legacyApp = createApp();
+  const nest = await createNestApp();
 
+  // Top-level dispatcher: every HTTP request hits this Express instance,
+  // which forwards to Nest for configured prefixes and Legacy for the rest.
+  // Keeping both apps behind one HTTP server lets WebSocket upgrades and
+  // existing middleware (proxy trust, error handling) continue to work.
+  const dispatcher = express();
+  if (env.PILEO_TRUST_PROXY ?? env.PILEO_NODE_ENV === 'production') {
+    dispatcher.set('trust proxy', 1);
+  }
+  dispatcher.disable('x-powered-by');
+
+  const nestPrefixes = env.PILEO_NEST_PREFIXES;
+  dispatcher.use((req: Request, res: Response, next: NextFunction) => {
+    if (nestPrefixes.length > 0 && pathBelongsToNest(req.path, nestPrefixes)) {
+      nest.instance(req, res, next);
+    } else {
+      legacyApp(req, res, next);
+    }
+  });
+
+  const server = createServer(dispatcher);
   const wss = setupWebSocketServer(server);
 
   server.listen(env.PILEO_PORT, env.PILEO_HOST, () => {
     logger.info(
-      { host: env.PILEO_HOST, port: env.PILEO_PORT, env: env.PILEO_NODE_ENV },
+      {
+        host: env.PILEO_HOST,
+        port: env.PILEO_PORT,
+        env: env.PILEO_NODE_ENV,
+        nestPrefixes: nestPrefixes.length > 0 ? nestPrefixes : '(none, all routes on legacy Express)',
+      },
       `Pileo server listening on ${env.PILEO_HOST}:${env.PILEO_PORT}`,
     );
   });
@@ -34,13 +63,15 @@ async function start(): Promise<void> {
     wss.close(() => {
       logger.info('WebSocket server closed');
     });
-    server.close(() => {
+    server.close(async () => {
       try {
+        await nest.close();
+        logger.info('Nest application closed');
         sqlite.close();
         logger.info('Database connection closed');
         process.exit(0);
       } catch (err: unknown) {
-        logger.error({ err }, 'Error closing database connection');
+        logger.error({ err }, 'Error during shutdown');
         process.exit(1);
       }
     });
