@@ -17,6 +17,7 @@ import { AttachmentsModule } from './attachments/attachments.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { ShareModule } from './share/share.module.js';
+import { TasksModule } from './tasks/tasks.module.js';
 
 // Root NestJS module. Domain modules get added one at a time via the
 // strangler-fig migration (see pileo-rewrite.md). DatabaseModule is @Global
@@ -41,6 +42,7 @@ import { ShareModule } from './share/share.module.js';
     UsersModule,
     AdminModule,
     ShareModule,
+    TasksModule,
   ],
 })
 export class AppModule {}
