@@ -1,219 +1,279 @@
+/* ConnectedApplications — lives inside SettingsDialog, so it inherits the
+   compact dialog rhythm. We reuse Pileo's design tokens
+   (--color-surface, --color-border, --color-text*, --color-primary). */
+
 .container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.description {
-  margin: 0;
-  color: var(--text-secondary, #64748b);
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.loading {
-  color: var(--text-secondary, #64748b);
-  font-size: 13px;
-  padding: 12px 0;
-}
-
-/* --- newly created secret banner --- */
-.secretBanner {
-  border: 1px solid var(--accent-border, #818cf8);
-  background: var(--accent-tint, rgba(79, 70, 229, 0.08));
-  border-radius: 10px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.secretHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-primary, #0f172a);
-  font-size: 13px;
-}
-.secretRow {
-  display: grid;
-  grid-template-columns: 100px 1fr auto;
-  align-items: center;
-  gap: 10px;
-}
-.secretLabel {
-  color: var(--text-secondary, #64748b);
-  font-size: 12px;
-}
-.secretValue {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  background: var(--surface-2, rgba(15, 23, 42, 0.06));
-  padding: 6px 8px;
-  border-radius: 6px;
-  overflow-x: auto;
-  word-break: break-all;
-}
-
-/* --- client list --- */
-.clientList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.clientRow {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 10px;
-  background: var(--surface, #ffffff);
 }
-.clientIconWrap {
+
+.skeleton {
+  height: 56px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--color-surface-2, rgba(127,127,127,0.06)) 0%, var(--color-surface, rgba(127,127,127,0.12)) 50%, var(--color-surface-2, rgba(127,127,127,0.06)) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* --- Empty state ----------------------------------------------------- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 14px 8px 4px;
+}
+.emptyIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface-2, rgba(127,127,127,0.08));
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+.emptyTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.emptyHint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+/* --- Client list ----------------------------------------------------- */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-light, rgba(127,127,127,0.12));
+  background: var(--color-surface, transparent);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.row:hover {
+  border-color: var(--color-border, rgba(127,127,127,0.22));
+}
+.avatar {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: var(--surface-2, rgba(15, 23, 42, 0.06));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary, #64748b);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary, #4F46E5), color-mix(in srgb, var(--color-primary, #4F46E5) 70%, #000));
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
-.clientInfo {
+.info {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.rowTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
-.clientName {
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--text-primary, #0f172a);
-}
-.clientMeta {
-  font-size: 12px;
-  color: var(--text-secondary, #64748b);
-}
-.clientUri {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  color: var(--text-secondary, #64748b);
-  background: var(--surface-2, rgba(15, 23, 42, 0.04));
-  padding: 2px 6px;
-  border-radius: 4px;
-  align-self: flex-start;
-  margin-top: 2px;
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
-  white-space: nowrap;
 }
-.revokeButton {
-  background: transparent;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 6px;
-  padding: 6px;
-  color: var(--text-secondary, #64748b);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, border-color 0.15s;
-}
-.revokeButton:hover {
-  color: var(--danger, #ef4444);
-  border-color: var(--danger, #ef4444);
+.meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
 }
 
-/* --- copy button --- */
-.copyButton {
-  background: transparent;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 6px;
-  padding: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary, #64748b);
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1.4;
 }
-.copyButton:hover {
-  color: var(--accent, #4F46E5);
+.badgePublic {
+  background: color-mix(in srgb, var(--color-primary, #4F46E5) 14%, transparent);
+  color: var(--color-primary, #4F46E5);
+}
+.badgeConfidential {
+  background: var(--color-surface-2, rgba(127,127,127,0.12));
+  color: var(--color-text-secondary, var(--color-text-muted));
 }
 
-/* --- add form --- */
+/* --- Icon button (revoke / copy) ------------------------------------- */
+.iconButton {
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.iconButton:hover {
+  background: var(--color-surface-2, rgba(127,127,127,0.10));
+  color: var(--color-text);
+}
+.row .iconButton:hover {
+  color: var(--color-error, #EF4444);
+}
+
+/* --- Add button (default) -------------------------------------------- */
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--color-border, rgba(127,127,127,0.25));
+  background: transparent;
+  color: var(--color-text-secondary, var(--color-text-muted));
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.addButton:hover {
+  border-color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #4F46E5);
+  background: color-mix(in srgb, var(--color-primary, #4F46E5) 6%, transparent);
+}
+
+/* --- Add form -------------------------------------------------------- */
 .addForm {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 14px;
-  border: 1px dashed var(--border, #e2e8f0);
   border-radius: 10px;
+  border: 1px solid var(--color-border-light, rgba(127,127,127,0.16));
+  background: var(--color-surface-2, rgba(127,127,127,0.04));
 }
-.checkboxRow {
+
+.field {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
+  flex-direction: column;
+  gap: 6px;
 }
-.checkboxRow input {
-  margin-top: 3px;
-}
-.checkboxLabel {
-  display: block;
-  font-size: 13px;
-  color: var(--text-primary, #0f172a);
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 .fieldHint {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: var(--text-secondary, #64748b);
-}
-.checkboxHint {
-  display: block;
-  font-size: 12px;
-  color: var(--text-secondary, #64748b);
-  margin-top: 2px;
-}
-.error {
-  color: var(--danger, #ef4444);
-  font-size: 12px;
   margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.45;
 }
-.addActions {
+
+/* Segmented control */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--color-background, rgba(127,127,127,0.10));
+  gap: 0;
+}
+.segment {
+  border: none;
+  background: transparent;
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.segment:hover { color: var(--color-text-secondary); }
+.segmentActive {
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-error, #EF4444);
+}
+
+.formActions {
   display: flex;
+  justify-content: flex-end;
   gap: 8px;
 }
 
-/* --- docs block --- */
-.docsBlock {
-  border-top: 1px solid var(--border, #e2e8f0);
-  padding-top: 14px;
-  margin-top: 4px;
+/* --- Newly issued secret banner -------------------------------------- */
+.secretBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #4F46E5) 32%, transparent);
+  background: color-mix(in srgb, var(--color-primary, #4F46E5) 8%, transparent);
 }
-.docsTitle {
-  font-size: 13px;
-  margin: 0 0 8px;
-  color: var(--text-primary, #0f172a);
-}
-.docsList {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--text-secondary, #64748b);
-  font-size: 13px;
-  line-height: 1.6;
-}
-.docsList code {
-  background: var(--surface-2, rgba(15, 23, 42, 0.06));
-  padding: 1px 5px;
-  border-radius: 4px;
+.secretHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
 }
-
-/* Dark mode tweaks via prefers-color-scheme; Pileo's design tokens take
-   precedence when defined globally. */
-:global(.dark) .clientRow {
-  background: var(--surface, #1e293b);
+.secretRow {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+.secretLabel {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.secretValue {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  background: var(--color-surface, rgba(255,255,255,0.5));
+  padding: 4px 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -1,4 +1,4 @@
-import { Sun, Moon, LogOut, Plug } from 'lucide-react';
+import { Sun, Moon, LogOut } from 'lucide-react';
 import { useUiStore } from '../../stores/ui.store';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate } from 'react-router-dom';
@@ -50,10 +50,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
         {/* Connected applications (OAuth 2.1 / MCP) */}
         <div className={styles.section}>
-          <span className={styles.sectionLabel}>
-            <Plug size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-            Connected applications
-          </span>
+          <span className={styles.sectionLabel}>Connected applications</span>
           <ConnectedApplications />
         </div>
 
