@@ -179,7 +179,7 @@ function rowToClient(row: ClientRowDb): OAuthClientRow {
 // Client management
 // ---------------------------------------------------------------------------
 
-export async function registerClient(input: RegisterClientInput, userId: string): Promise<OAuthClientWithSecret> {
+export async function registerClient(input: RegisterClientInput, userId: string | null): Promise<OAuthClientWithSecret> {
   if (!input.name || input.name.trim().length === 0) {
     throw new ValidationError('Client name is required');
   }
@@ -211,7 +211,7 @@ export async function registerClient(input: RegisterClientInput, userId: string)
       secretHash,
       JSON.stringify(input.redirectUris),
       input.isPublic ? 1 : 0,
-      userId,
+      userId, // NULL for RFC 7591 anonymous registration; claimed on first /authorize approve
       nowIso(),
     );
 
@@ -260,8 +260,8 @@ async function verifyClientSecret(clientId: string, presentedSecret: string | nu
 
 export function createAuthorizationCode(input: AuthorizationCodeInput): string {
   const client = sqlite
-    .prepare(`SELECT redirect_uris FROM oauth_clients WHERE id = ?`)
-    .get(input.clientId) as { redirect_uris: string } | undefined;
+    .prepare(`SELECT redirect_uris, created_by FROM oauth_clients WHERE id = ?`)
+    .get(input.clientId) as { redirect_uris: string; created_by: string | null } | undefined;
   if (!client) throw new UnauthorizedError('Unknown client');
 
   const allowed = JSON.parse(client.redirect_uris) as string[];
@@ -270,6 +270,14 @@ export function createAuthorizationCode(input: AuthorizationCodeInput): string {
   }
   if (input.codeChallengeMethod !== 'S256') {
     throw new ValidationError('Only code_challenge_method=S256 is supported');
+  }
+
+  // Claim-on-approve: the first user who consents to an anonymously
+  // registered client becomes its owner, so it shows up in their settings
+  // and they can revoke it.
+  if (client.created_by === null) {
+    sqlite.prepare(`UPDATE oauth_clients SET created_by = ? WHERE id = ? AND created_by IS NULL`)
+      .run(input.userId, input.clientId);
   }
 
   const code = randomToken(AUTH_CODE_PREFIX, 32);

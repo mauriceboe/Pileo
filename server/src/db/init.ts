@@ -235,13 +235,16 @@ export function initializeDatabase(): void {
 
     -- OAuth 2.1 — registered MCP clients (claude.ai connector etc.).
     -- client_secret_hash is NULL for public clients (PKCE-only).
+    -- created_by is NULL for clients registered via RFC 7591 Dynamic Client
+    -- Registration before any user has approved them; the first user to
+    -- consent in /authorize claims ownership.
     CREATE TABLE IF NOT EXISTS oauth_clients (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       client_secret_hash TEXT,
       redirect_uris TEXT NOT NULL,
       is_public INTEGER NOT NULL DEFAULT 1,
-      created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_by TEXT REFERENCES users(id) ON DELETE CASCADE,
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_oauth_clients_created_by ON oauth_clients(created_by);
@@ -295,6 +298,37 @@ export function initializeDatabase(): void {
   const columnColumns = sqlite.pragma('table_info(columns)') as Array<{ name: string }>;
   if (!columnColumns.some((col) => col.name === 'is_rejected')) {
     sqlite.exec('ALTER TABLE columns ADD COLUMN is_rejected INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // RFC 7591: oauth_clients.created_by must accept NULL for anonymous
+  // Dynamic Client Registration. The original schema shipped with NOT NULL;
+  // SQLite can't drop a NOT NULL constraint via ALTER, so we rebuild the
+  // table when we detect the old shape. Idempotent — once columns.notnull
+  // is 0 the block is a no-op.
+  const oauthClientCols = sqlite.pragma('table_info(oauth_clients)') as Array<{ name: string; notnull: number }>;
+  const createdBy = oauthClientCols.find((c) => c.name === 'created_by');
+  if (createdBy && createdBy.notnull === 1) {
+    logger.info('Rebuilding oauth_clients to allow NULL created_by (RFC 7591)');
+    sqlite.exec(`
+      PRAGMA foreign_keys = OFF;
+      BEGIN;
+      CREATE TABLE oauth_clients_new (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        client_secret_hash TEXT,
+        redirect_uris TEXT NOT NULL,
+        is_public INTEGER NOT NULL DEFAULT 1,
+        created_by TEXT REFERENCES users(id) ON DELETE CASCADE,
+        created_at TEXT NOT NULL
+      );
+      INSERT INTO oauth_clients_new (id, name, client_secret_hash, redirect_uris, is_public, created_by, created_at)
+        SELECT id, name, client_secret_hash, redirect_uris, is_public, created_by, created_at FROM oauth_clients;
+      DROP TABLE oauth_clients;
+      ALTER TABLE oauth_clients_new RENAME TO oauth_clients;
+      CREATE INDEX IF NOT EXISTS idx_oauth_clients_created_by ON oauth_clients(created_by);
+      COMMIT;
+      PRAGMA foreign_keys = ON;
+    `);
   }
 
   logger.info('Database tables initialized');

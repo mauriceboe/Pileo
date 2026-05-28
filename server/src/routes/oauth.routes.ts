@@ -45,9 +45,15 @@ const registerSchema = z.object({
   redirect_uris: z.array(z.string().url()).min(1),
   token_endpoint_auth_method: z.enum(['none', 'client_secret_post']).default('none'),
 });
-router.post('/register', authenticate, validate(registerSchema), async (req: Request, res: Response) => {
+// RFC 7591 §1.2: open Dynamic Client Registration. We deliberately accept
+// requests without a Pileo session so MCP connectors (claude.ai) can
+// bootstrap themselves before any user has signed in. The created client
+// has no owner until the first user approves a consent request — see
+// claim-on-approve in oauth.service.createAuthorizationCode.
+router.post('/register', validate(registerSchema), async (req: Request, res: Response) => {
   const body = (req as Request & { validatedBody: z.infer<typeof registerSchema> }).validatedBody;
-  const userId = (req as AuthenticatedRequest).user.id;
+  const session = req.session as unknown as Record<string, unknown> | undefined;
+  const userId = (session?.['user'] as { id?: string } | undefined)?.id ?? null;
   const client = await oauthService.registerClient(
     {
       name: body.client_name,

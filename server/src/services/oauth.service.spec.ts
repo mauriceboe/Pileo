@@ -31,7 +31,7 @@ function initSchema() {
       client_secret_hash TEXT,
       redirect_uris TEXT NOT NULL,
       is_public INTEGER NOT NULL DEFAULT 1,
-      created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_by TEXT REFERENCES users(id) ON DELETE CASCADE,
       created_at TEXT NOT NULL
     );
     CREATE TABLE oauth_codes (
@@ -142,6 +142,57 @@ describe('oauth.service — client registration', () => {
     await oauth.registerClient({ name: 'second', redirectUris: ['https://x.test/b'], isPublic: true }, USER);
     const list = oauth.listClients(USER);
     expect(list.map((c) => c.name)).toEqual(['second', 'first']);
+  });
+
+  it('accepts userId=null for anonymous Dynamic Client Registration', async () => {
+    // No user is seeded — the client must persist with NULL created_by.
+    const c = await oauth.registerClient(
+      { name: 'claude.ai', redirectUris: ['https://claude.ai/cb'], isPublic: true },
+      null,
+    );
+    expect(c.id).toBeTruthy();
+    const row = memDb.prepare(`SELECT created_by FROM oauth_clients WHERE id = ?`).get(c.id) as { created_by: string | null };
+    expect(row.created_by).toBeNull();
+  });
+
+  it('claims an anonymous client when a user first approves', async () => {
+    const c = await oauth.registerClient(
+      { name: 'claude', redirectUris: ['https://claude.ai/cb'], isPublic: true },
+      null,
+    );
+    seedUser(USER);
+    oauth.createAuthorizationCode({
+      clientId: c.id,
+      userId: USER,
+      redirectUri: 'https://claude.ai/cb',
+      codeChallenge: 'x'.repeat(43),
+      codeChallengeMethod: 'S256',
+      scopes: [],
+      audience: AUDIENCE,
+    });
+    const row = memDb.prepare(`SELECT created_by FROM oauth_clients WHERE id = ?`).get(c.id) as { created_by: string };
+    expect(row.created_by).toBe(USER);
+  });
+
+  it('does not re-claim a client that already has an owner', async () => {
+    seedUser(USER);
+    seedUser('other');
+    const c = await oauth.registerClient(
+      { name: 'owned', redirectUris: ['https://x.test/cb'], isPublic: true },
+      USER,
+    );
+    // A different user approving must not overwrite the original owner.
+    oauth.createAuthorizationCode({
+      clientId: c.id,
+      userId: 'other',
+      redirectUri: 'https://x.test/cb',
+      codeChallenge: 'x'.repeat(43),
+      codeChallengeMethod: 'S256',
+      scopes: [],
+      audience: AUDIENCE,
+    });
+    const row = memDb.prepare(`SELECT created_by FROM oauth_clients WHERE id = ?`).get(c.id) as { created_by: string };
+    expect(row.created_by).toBe(USER);
   });
 
   it('revokeClient only allows the owner', async () => {
