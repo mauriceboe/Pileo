@@ -6,11 +6,21 @@ import { CustomFieldsModule } from './custom-fields/custom-fields.module.js';
 import { ActivityModule } from './activity/activity.module.js';
 import { LinksModule } from './links/links.module.js';
 import { ApiKeysModule } from './api-keys/api-keys.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
 
 // Root NestJS module. Domain modules get added one at a time via the
 // strangler-fig migration (see pileo-rewrite.md). DatabaseModule is @Global
 // so feature modules can inject SQLITE without re-importing it.
 @Module({
-  imports: [DatabaseModule, McpModule, LabelsModule, CustomFieldsModule, ActivityModule, LinksModule, ApiKeysModule],
+  imports: [
+    DatabaseModule,
+    McpModule,
+    LabelsModule,
+    CustomFieldsModule,
+    ActivityModule,
+    LinksModule,
+    ApiKeysModule,
+    NotificationsModule,
+  ],
 })
 export class AppModule {}
