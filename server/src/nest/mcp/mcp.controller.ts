@@ -7,7 +7,6 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -21,16 +20,7 @@ import { registerTools } from './tools.js';
 import { registerResources } from './resources.js';
 import { RateLimiter } from './rate-limit.js';
 
-// JSON body parser scoped to this controller. The top-level dispatcher in
-// index.ts forwards raw requests to Nest (bodyParser: false), so the MCP
-// controller has to parse its own input — keeps the legacy Express stack
-// untouched.
-const jsonBody = express.json({ limit: '1mb' });
-function parseJson(req: Request, res: Response): Promise<void> {
-  return new Promise((resolve, reject) => {
-    jsonBody(req, res, (err) => (err ? reject(err) : resolve()));
-  });
-}
+// Nest's global body parser handles the POST body for us — see bootstrap.ts.
 
 // Per-user-per-minute rate cap. See rate-limit.ts for the implementation.
 const rateLimiter = new RateLimiter({ windowMs: 60 * 1000, max: 300 });
@@ -71,20 +61,6 @@ export class McpController {
         error: { code: 'RATE_LIMITED', message: 'Too many requests. Please slow down.' },
       });
       return;
-    }
-
-    // POST is the only verb that may carry a JSON body — parse it eagerly
-    // so both the session-id branch and the new-session branch see it.
-    if (req.method === 'POST') {
-      try {
-        await parseJson(req, res);
-      } catch (err) {
-        this.logger.warn(`Failed to parse JSON body: ${(err as Error).message}`);
-        res.status(HttpStatus.BAD_REQUEST).json({
-          error: { code: 'BAD_REQUEST', message: 'Invalid JSON body' },
-        });
-        return;
-      }
     }
 
     const sessionId = req.headers['mcp-session-id'];

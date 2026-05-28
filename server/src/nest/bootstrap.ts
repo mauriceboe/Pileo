@@ -21,7 +21,12 @@ export async function createNestApp(): Promise<NestHandle> {
     new ExpressAdapter(expressInstance),
     {
       logger: ['error', 'warn', 'log'],
-      bodyParser: false,
+      // bodyParser:true so @Body() controllers see a parsed body without
+      // each module having to install its own json middleware. The dispatcher
+      // in index.ts only forwards requests with raw bodies to one app or the
+      // other — there is no double-parse with legacy Express, which parses
+      // separately on its own instance.
+      bodyParser: true,
     },
   );
 
