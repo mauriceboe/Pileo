@@ -99,8 +99,12 @@ router.get('/authorize', (req: Request, res: Response) => {
     res.redirect(`/login?next=${next}`);
     return;
   }
-  const user = session['user'] as { display_name: string; username: string };
-  renderConsent(res, { ...params, displayName: user.display_name, username: user.username });
+  const user = session['user'] as { displayName?: string; username?: string };
+  renderConsent(res, {
+    ...params,
+    displayName: user.displayName ?? user.username ?? 'you',
+    username: user.username ?? '',
+  });
 });
 
 router.post('/authorize', (req: Request, res: Response) => {
@@ -246,8 +250,9 @@ function parseAuthorizeQuery(req: Request): AuthorizeParams | { error: string; e
 
 // HTML rendering — kept inline + minimal. The settings UI is the rich
 // surface; the consent page is just a security checkpoint.
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+function escapeHtml(s: string | null | undefined): string {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
 function renderConsent(res: Response, ctx: AuthorizeParams & { displayName: string; username: string }): void {
