@@ -43,6 +43,19 @@ export async function createNestApp(): Promise<NestHandle> {
   expressInstance.use(createSessionMiddleware());
   expressInstance.use('/uploads', express.static(path.resolve(env.PILEO_UPLOAD_DIR)));
 
+  // SPA assets + fallback. Registered BEFORE Nest so the index.html
+  // fallback wins over Nest's NotFoundException, which AppErrorFilter
+  // would otherwise serialise as a JSON 404 for the browser request to /.
+  // express.static calls next() when no file matches, so /api/* and
+  // /.well-known/* still reach the Nest controllers below.
+  if (env.PILEO_NODE_ENV === 'production') {
+    const clientDist = path.join(currentDir, '../../../client/dist');
+    expressInstance.use(express.static(clientDist));
+    expressInstance.get(/^(?!\/api\/|\/\.well-known\/|\/uploads\/).*/, (_req: Request, res: Response) => {
+      res.sendFile(path.join(clientDist, 'index.html'));
+    });
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
     new ExpressAdapter(expressInstance),
@@ -51,21 +64,6 @@ export async function createNestApp(): Promise<NestHandle> {
 
   app.useGlobalFilters(new AppErrorFilter());
   await app.init();
-
-  // SPA fallback in production. Registered AFTER Nest so controllers own
-  // /api/*, /.well-known/* and /uploads/*; everything else falls through
-  // to index.html.
-  if (env.PILEO_NODE_ENV === 'production') {
-    const clientDist = path.join(currentDir, '../../../client/dist');
-    expressInstance.use(express.static(clientDist));
-    expressInstance.get('*', (req: Request, res: Response, next) => {
-      if (req.path.startsWith('/api/') || req.path.startsWith('/.well-known/')) {
-        next();
-        return;
-      }
-      res.sendFile(path.join(clientDist, 'index.html'));
-    });
-  }
 
   return {
     instance: expressInstance,
