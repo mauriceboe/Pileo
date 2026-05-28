@@ -6,15 +6,13 @@ vi.mock('../../services/user.service.js', () => ({
   changePassword: vi.fn(),
   updateAvatar: vi.fn(),
 }));
-
-// /me/tasks and /me/stats touch drizzle directly. We mock the whole config
-// module so the controller doesn't try to open a real DB during tests.
-vi.mock('../../config/database.js', () => ({
-  db: { select: vi.fn() },
-  sqlite: undefined,
+vi.mock('../../services/user-stats.service.js', () => ({
+  listAssignedTasks: vi.fn(),
+  getDashboardStats: vi.fn(),
 }));
 
 import * as userService from '../../services/user.service.js';
+import * as userStats from '../../services/user-stats.service.js';
 import { UsersController } from './users.controller.js';
 import { ValidationError } from '../../utils/errors.js';
 
@@ -57,5 +55,21 @@ describe('UsersController', () => {
       data: { message: 'Password changed successfully' },
     });
     expect(userService.changePassword).toHaveBeenCalledWith('u1', body);
+  });
+
+  it('myTasks delegates to user-stats.listAssignedTasks', async () => {
+    vi.mocked(userStats.listAssignedTasks).mockResolvedValue([{ id: 't1', title: 'x' }] as never);
+    expect(await ctrl.myTasks(USER)).toEqual({ data: [{ id: 't1', title: 'x' }] });
+    expect(userStats.listAssignedTasks).toHaveBeenCalledWith('u1');
+  });
+
+  it('myStats delegates to user-stats.getDashboardStats', async () => {
+    vi.mocked(userStats.getDashboardStats).mockResolvedValue({
+      totalTasks: 5, completed: 2, inProgress: 3, notifications: 1,
+    } as never);
+    expect(await ctrl.myStats(USER)).toEqual({
+      data: { totalTasks: 5, completed: 2, inProgress: 3, notifications: 1 },
+    });
+    expect(userStats.getDashboardStats).toHaveBeenCalledWith('u1');
   });
 });
