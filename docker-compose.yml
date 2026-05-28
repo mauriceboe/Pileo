@@ -12,7 +12,7 @@ services:
       # Strangler-fig: path prefixes routed to the NestJS app instead of
       # legacy Express. Override via env to add more prefixes as modules
       # are migrated, or set to "" to roll back instantly.
-      - PILEO_NEST_PREFIXES=${PILEO_NEST_PREFIXES:-/api/v1/mcp,/api/v1/labels,/api/v1/projects/*/labels,/api/v1/custom-fields,/api/v1/projects/*/custom-fields,/api/v1/tasks/*/custom-values,/api/v1/projects/*/activity,/api/v1/tasks/*/activity,/api/v1/links,/api/v1/tasks/*/links,/api/v1/api-keys,/api/v1/projects/*/api-keys,/api/v1/notifications,/api/v1/comments,/api/v1/tasks/*/comments,/api/v1/checklist,/api/v1/tasks/*/checklist}
+      - PILEO_NEST_PREFIXES=${PILEO_NEST_PREFIXES:-/api/v1/mcp,/api/v1/labels,/api/v1/projects/*/labels,/api/v1/custom-fields,/api/v1/projects/*/custom-fields,/api/v1/tasks/*/custom-values,/api/v1/projects/*/activity,/api/v1/tasks/*/activity,/api/v1/links,/api/v1/tasks/*/links,/api/v1/api-keys,/api/v1/projects/*/api-keys,/api/v1/notifications,/api/v1/comments,/api/v1/tasks/*/comments,/api/v1/checklist,/api/v1/tasks/*/checklist,/api/v1/projects/*/members,/api/v1/boards,/api/v1/projects/*/boards,/api/v1/columns,/api/v1/boards/*/columns}
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
