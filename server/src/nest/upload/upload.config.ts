@@ -1,8 +1,6 @@
-// Multer options shared by every Nest controller that accepts file
-// uploads. Mirrors server/src/middleware/upload.middleware.ts so the
-// Nest side enforces the same allow-list of extensions / MIME types as
-// the legacy Express stack. Keeping the two in sync is a known debt; if
-// either changes, the other has to follow.
+// Multer options shared by every controller that accepts uploads:
+// disk storage under PILEO_UPLOAD_DIR, an allow-list of file types
+// (images, documents, archives, 3D models), and a max file size.
 
 import multer from 'multer';
 import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface.js';

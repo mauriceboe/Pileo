@@ -2,12 +2,9 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@n
 import type { Response } from 'express';
 import { AppError } from '../../utils/errors.js';
 
-// Mirrors server/src/middleware/error.middleware.ts exactly so a Nest
-// controller throwing a legacy Pileo error serialises to the same
-// {error: {code, message, details?}} envelope as an Express controller.
-//
-// We catch HttpException too so any plain Nest @HttpException follows the
-// same envelope rather than Nest's default {statusCode, message} shape.
+// Serialises every thrown error to {error:{code,message,details?}}.
+// AppError carries its own status + code; HttpException is mapped through
+// codeForStatus; anything else becomes 500 INTERNAL_SERVER_ERROR.
 @Catch()
 export class AppErrorFilter implements ExceptionFilter {
   private readonly logger = new Logger('AppErrorFilter');

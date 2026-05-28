@@ -5,11 +5,7 @@ import * as apiKeyService from '../../services/api-key.service.js';
 import * as userService from '../../services/user.service.js';
 import { UnauthorizedError } from '../../utils/errors.js';
 
-// Mirrors the behaviour of server/src/middleware/auth.middleware.ts exactly:
-// Bearer token (api key) takes precedence, then express-session falls through.
-// On failure we throw the same UnauthorizedError the legacy middleware throws,
-// so the legacy error.middleware can format it identically — keeps the wire
-// contract stable across Nest and Express halves.
+// Bearer API key takes precedence, then express-session.
 @Injectable()
 export class PileoAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {

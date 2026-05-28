@@ -29,11 +29,8 @@ import { AppError } from '../../utils/errors.js';
 import * as authService from '../../services/auth.service.js';
 import { isRegistrationEnabled } from '../../services/settings.service.js';
 
-// Public auth endpoints. We pass @Req() into the service for register +
-// login because the service writes the session on the Express request
-// object — that behaviour stays exactly the same on the Nest side because
-// the Nest Express instance also has the session middleware mounted
-// (see bootstrap.ts).
+// register + login write the session on req — that's why @Req() is
+// threaded into the service.
 @Controller('api/v1/auth')
 export class AuthController {
   @Get('registration-status')
@@ -48,7 +45,6 @@ export class AuthController {
     @Req() req: Request,
   ): Promise<{ data: unknown }> {
     if (!isRegistrationEnabled()) {
-      // Same envelope, status, code, and message as the legacy route.
       throw new AppError('Registration is currently disabled', 403, 'REGISTRATION_DISABLED');
     }
     const user = await authService.register(body, req);

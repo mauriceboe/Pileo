@@ -26,9 +26,7 @@ export class TaskLinksController {
     return { data: await linkService.list(taskId, user.id) };
   }
 
-  // Legacy did not validate body.url — it forwarded whatever came in and
-  // let the service/db decide. We preserve that exact behaviour: parity
-  // beats strictness in a strangler migration.
+  // No URL validation — clients depend on the looser legacy behaviour.
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(

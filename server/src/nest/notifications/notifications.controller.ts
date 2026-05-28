@@ -15,9 +15,7 @@ import * as notificationService from '../../services/notification.service.js';
 @Controller('api/v1/notifications')
 @UseGuards(PileoAuthGuard)
 export class NotificationsController {
-  // GET returns BOTH the list and a top-level unreadCount field — the
-  // legacy response is {data, unreadCount}, not the more common {data}.
-  // We must keep that exact shape.
+  // Response shape is {data, unreadCount} — not the usual {data}.
   @Get()
   async list(@CurrentUser() user: { id: string }): Promise<{ data: unknown; unreadCount: number }> {
     const [data, unreadCount] = await Promise.all([

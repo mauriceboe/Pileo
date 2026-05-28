@@ -16,10 +16,8 @@ import { AppError, ValidationError } from '../../utils/errors.js';
 import * as svc from '../../services/custom-field.service.js';
 import type { CustomField } from '../../services/custom-field.service.js';
 
-// We deliberately do not reach for ZodValidationPipe here — the legacy
-// routes emit inline messages without the {path, message} details array,
-// and parity is the rule for a strangler migration. The validators below
-// reproduce the legacy wire output byte-for-byte.
+// No ZodValidationPipe: legacy emitted plain messages without a
+// {path,message} details array, and clients depend on that shape.
 
 interface CreateFieldBody {
   name?: unknown;
@@ -98,9 +96,7 @@ export class CustomFieldsController {
     try {
       return { data: svc.updateField(fieldId, parseUpdate(body)) };
     } catch (err) {
-      // Legacy: service throws plain Error('Field not found') → caught and
-      // returned as 404 with message "Field not found". We preserve that
-      // exact message rather than the auto-formatted NotFoundError text.
+      // service throws a plain Error('Field not found'); map to 404.
       if (err instanceof ValidationError) throw err;
       throw new AppError('Field not found', 404, 'NOT_FOUND');
     }

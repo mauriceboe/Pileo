@@ -27,8 +27,6 @@ export class ProjectApiKeysController {
     return { data: await apiKeyService.list(projectId, user.id) };
   }
 
-  // Legacy emits the exact message "Name is required (max 100 characters)"
-  // when the name is missing or too long — reproduce verbatim.
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(

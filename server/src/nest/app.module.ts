@@ -21,9 +21,8 @@ import { TasksModule } from './tasks/tasks.module.js';
 import { SessionAuthModule } from './auth/session-auth.module.js';
 import { OauthModule } from './oauth/oauth.module.js';
 
-// Root NestJS module. Domain modules get added one at a time via the
-// strangler-fig migration (see pileo-rewrite.md). DatabaseModule is @Global
-// so feature modules can inject SQLITE without re-importing it.
+// DatabaseModule is @Global so feature modules can inject SQLITE
+// without re-importing it.
 @Module({
   imports: [
     DatabaseModule,

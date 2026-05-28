@@ -53,8 +53,7 @@ export class AdminController {
     return { data: await adminService.updateRole(targetUserId, user.id, body) };
   }
 
-  // Settings endpoints: legacy did NOT validate the body — anything that
-  // isn't a boolean is silently ignored. We preserve that exactly.
+  // Non-boolean registrationEnabled values are silently ignored.
   @Get('settings')
   getSettings(): { data: { registrationEnabled: boolean } } {
     return { data: { registrationEnabled: settingsService.isRegistrationEnabled() } };

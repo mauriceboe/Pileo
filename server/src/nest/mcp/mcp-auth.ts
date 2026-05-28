@@ -12,14 +12,10 @@ export interface McpAuthResult {
   method: McpAuthMethod;
 }
 
-// MCP authentication accepts two token types:
-//   1. Personal API keys (Bearer pil_…)   — for the owner's own scripts / Claude Code.
-//   2. OAuth 2.1 access tokens (Bearer pioa_…) — for third-party connectors
-//      (claude.ai). These are audience-bound to this exact endpoint.
-//
-// Session cookies are deliberately NOT honoured here: MCP clients are always
-// headless, and accepting cookies would let a CSRF-style attack invoke MCP
-// tools from a browser context.
+// Accepts `Bearer pil_…` (personal API key) or `Bearer pioa_…` (OAuth
+// access token, audience-bound to this endpoint per RFC 8707).
+// Session cookies are not accepted — MCP clients are headless and we
+// don't want browser CSRF reaching tool calls.
 export async function authenticateMcpRequest(req: Request): Promise<McpAuthResult | null> {
   const header = req.headers['authorization'];
   if (!header || typeof header !== 'string') return null;
@@ -32,14 +28,10 @@ export async function authenticateMcpRequest(req: Request): Promise<McpAuthResul
   if (token.startsWith(oauthService.TOKEN_PREFIXES.access)) {
     const resolved = oauthService.resolveAccessToken(token);
     if (!resolved) return null;
-    // Audience-binding (RFC 8707): the token was minted for this exact
-    // resource URL. Anything else means token reuse across resources →
-    // reject loudly.
-    const expected = expectedAudience(req);
-    if (resolved.audience !== expected) return null;
+    if (resolved.audience !== expectedAudience(req)) return null;
     return {
       userId: resolved.userId,
-      projectId: '', // OAuth tokens are user-scoped, not project-scoped.
+      projectId: '',
       scopes: resolved.scopes,
       method: 'oauth',
     };

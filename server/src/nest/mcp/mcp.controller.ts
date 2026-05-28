@@ -20,9 +20,6 @@ import { registerTools } from './tools.js';
 import { registerResources } from './resources.js';
 import { RateLimiter } from './rate-limit.js';
 
-// Nest's global body parser handles the POST body for us — see bootstrap.ts.
-
-// Per-user-per-minute rate cap. See rate-limit.ts for the implementation.
 const rateLimiter = new RateLimiter({ windowMs: 60 * 1000, max: 300 });
 
 @Controller('api/v1/mcp')
@@ -33,15 +30,14 @@ export class McpController {
     mcpSessions.startSweeper();
   }
 
-  // Single handler for POST (initialize / tool call), GET (SSE stream), and
-  // DELETE (session close). The MCP StreamableHTTP transport handles the
-  // protocol details — we just gate on auth, rate limit, and session lookup.
+  // One handler for POST (init / tool call), GET (SSE stream), DELETE
+  // (session close). The transport owns the protocol; we own auth +
+  // rate limit + session lookup.
   @All()
   async handle(@Req() req: Request, @Res() res: Response): Promise<void> {
     const auth = await authenticateMcpRequest(req);
     if (!auth) {
-      // RFC 9728: point clients at the protected-resource metadata so they
-      // can discover the authorization server without out-of-band config.
+      // RFC 9728 discovery hint
       const proto = (req.headers['x-forwarded-proto'] as string | undefined) ?? req.protocol;
       const host = (req.headers['x-forwarded-host'] as string | undefined) ?? req.headers['host'];
       const resourceMeta = `${proto}://${host}/.well-known/oauth-protected-resource/api/v1/mcp`;

@@ -4,8 +4,7 @@ import { db } from '../../config/database.js';
 import { users } from '../../db/schema/index.js';
 import { ForbiddenError } from '../../utils/errors.js';
 
-// Mirrors server/src/middleware/admin.middleware.ts. Must be applied AFTER
-// PileoAuthGuard so req.user is set; throws ForbiddenError otherwise.
+// Apply after PileoAuthGuard so req.user is set.
 @Injectable()
 export class RequireAdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
