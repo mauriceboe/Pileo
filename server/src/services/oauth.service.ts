@@ -1,3 +1,9 @@
+// Uses raw better-sqlite3 prepared statements rather than drizzle: this
+// service does a lot of single-statement transactional work (claim-on-
+// approve, refresh-rotation, conditional updates with NULL/timestamp
+// guards) where SQL is clearer than the drizzle DSL. The oauth_* tables
+// are intentionally not declared in db/schema/.
+
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';

@@ -2,7 +2,6 @@ import {
   All,
   Controller,
   HttpStatus,
-  Logger,
   Req,
   Res,
 } from '@nestjs/common';
@@ -19,13 +18,13 @@ import {
 import { registerTools } from './tools.js';
 import { registerResources } from './resources.js';
 import { RateLimiter } from './rate-limit.js';
+import { pickBaseUrl } from '../common/url.js';
+import { logger } from '../../config/logger.js';
 
 const rateLimiter = new RateLimiter({ windowMs: 60 * 1000, max: 300 });
 
 @Controller('api/v1/mcp')
 export class McpController {
-  private readonly logger = new Logger('McpController');
-
   constructor() {
     mcpSessions.startSweeper();
   }
@@ -38,9 +37,7 @@ export class McpController {
     const auth = await authenticateMcpRequest(req);
     if (!auth) {
       // RFC 9728 discovery hint
-      const proto = (req.headers['x-forwarded-proto'] as string | undefined) ?? req.protocol;
-      const host = (req.headers['x-forwarded-host'] as string | undefined) ?? req.headers['host'];
-      const resourceMeta = `${proto}://${host}/.well-known/oauth-protected-resource/api/v1/mcp`;
+      const resourceMeta = `${pickBaseUrl(req)}/.well-known/oauth-protected-resource/api/v1/mcp`;
       res.setHeader(
         'WWW-Authenticate',
         `Bearer realm="Pileo MCP", resource_metadata="${resourceMeta}", error="invalid_token"`,
@@ -114,7 +111,7 @@ export class McpController {
       const body = req.method === 'POST' ? req.body : undefined;
       await session.transport.handleRequest(req, res, body);
     } catch (err) {
-      this.logger.error(`MCP transport error: ${(err as Error).message}`);
+      logger.error({ err }, 'MCP transport error');
       if (!res.headersSent) {
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
           error: { code: 'INTERNAL_ERROR', message: 'Internal MCP error' },
@@ -141,8 +138,9 @@ export class McpController {
       sessionIdGenerator: () => randomUUID(),
       onsessioninitialized: (sid) => {
         mcpSessions.add(sid, session);
-        this.logger.log(
-          `Session ${sid} created for user ${userId}. Active: ${mcpSessions.size()}`,
+        logger.info(
+          { sid, userId, active: mcpSessions.size() },
+          'MCP session created',
         );
       },
       onsessionclosed: (sid) => {

@@ -16,7 +16,9 @@ import { z } from 'zod';
 import { PileoAuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { ZodValidationPipe } from '../validation/zod.pipe.js';
+import { pickBaseUrl } from '../common/url.js';
 import * as oauthService from '../../services/oauth.service.js';
+import { renderConsent, renderError } from './oauth.templates.js';
 
 const registerSchema = z.object({
   client_name: z.string().min(1).max(100),
@@ -55,10 +57,10 @@ export class OauthController {
     };
   }
 
-  // RFC 7591 §1.2: open Dynamic Client Registration. We accept requests
+  // RFC 7591 §1.2: open Dynamic Client Registration. Accept requests
   // without a Pileo session so MCP connectors (claude.ai) can bootstrap
-  // themselves. The created client is ownerless until the first user
-  // approves a consent request — see claim-on-approve in oauth.service.
+  // themselves. Ownerless until the first user approves a consent
+  // request — see claim-on-approve in oauth.service.
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(
@@ -102,7 +104,7 @@ export class OauthController {
   authorizeGet(@Req() req: Request, @Res() res: Response): void {
     const params = parseAuthorizeQuery(req.query);
     if ('error' in params) {
-      renderError(res, params.error, params.error_description);
+      res.status(400).type('html').send(renderError(params.error, params.error_description));
       return;
     }
     const session = req.session as unknown as Record<string, unknown> | undefined;
@@ -111,18 +113,23 @@ export class OauthController {
       return;
     }
     const user = session['user'] as { displayName?: string; username?: string };
-    renderConsent(res, {
-      ...params,
+    const client = oauthService.getClient(params.client_id)!;
+    const scopes = params.scope ? params.scope.split(' ').filter(Boolean) : ['mcp.read', 'mcp.write'];
+    res.type('html').send(renderConsent({
+      clientName: client.name,
       displayName: user.displayName ?? user.username ?? 'you',
       username: user.username ?? '',
-    });
+      redirectUri: params.redirect_uri,
+      scopes,
+      formAction: `/api/v1/oauth/authorize${queryStringOf(params)}`,
+    }));
   }
 
   @Post('authorize')
   authorizePost(@Req() req: Request, @Res() res: Response): void {
     const params = parseAuthorizeQuery(req.query);
     if ('error' in params) {
-      renderError(res, params.error, params.error_description);
+      res.status(400).type('html').send(renderError(params.error, params.error_description));
       return;
     }
     const session = req.session as unknown as Record<string, unknown> | undefined;
@@ -151,7 +158,7 @@ export class OauthController {
         audience: params.resource ?? `${pickBaseUrl(req)}/api/v1/mcp`,
       });
     } catch (err) {
-      renderError(res, 'invalid_request', (err as Error).message);
+      res.status(400).type('html').send(renderError('invalid_request', (err as Error).message));
       return;
     }
     const url = new URL(params.redirect_uri);
@@ -197,13 +204,13 @@ export class OauthController {
   @Post('revoke')
   @HttpCode(HttpStatus.OK)
   revoke(@Body() body: Record<string, unknown>): void {
-    // RFC 7009: always 200 even when the token didn't exist.
+    // RFC 7009: 200 even when the token didn't exist.
     oauthService.revokeAccessToken(String(body['token'] ?? ''));
   }
 }
 
 // ---------------------------------------------------------------------------
-// Helpers (inline because they only serve this controller)
+// Local helpers — only used inside this controller.
 // ---------------------------------------------------------------------------
 
 function tokenResponse(tokens: { accessToken: string; refreshToken: string; expiresIn: number; scopes: string[] }) {
@@ -214,12 +221,6 @@ function tokenResponse(tokens: { accessToken: string; refreshToken: string; expi
     expires_in: tokens.expiresIn,
     scope: tokens.scopes.join(' '),
   };
-}
-
-function pickBaseUrl(req: Request): string {
-  const proto = req.headers['x-forwarded-proto'] ?? req.protocol;
-  const host = req.headers['x-forwarded-host'] ?? req.headers['host'];
-  return `${proto}://${host}`;
 }
 
 interface AuthorizeParams {
@@ -261,51 +262,6 @@ function parseAuthorizeQuery(q: Record<string, unknown>): AuthorizeParams | { er
   };
 }
 
-function escapeHtml(s: string | null | undefined): string {
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-}
-
-function renderConsent(res: Response, ctx: AuthorizeParams & { displayName: string; username: string }): void {
-  const client = oauthService.getClient(ctx.client_id)!;
-  const scopes = ctx.scope ? ctx.scope.split(' ').filter(Boolean) : ['mcp.read', 'mcp.write'];
-  res.type('html').send(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Authorize ${escapeHtml(client.name)} · Pileo</title>
-<style>
-  :root { color-scheme: light dark; --bg:#fff; --fg:#0f172a; --muted:#64748b; --border:#e2e8f0; --accent:#4F46E5; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0f172a; --fg:#f1f5f9; --muted:#94a3b8; --border:#1e293b; } }
-  html,body { margin:0; background:var(--bg); color:var(--fg); font:14px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 420px; margin: 8vh auto; padding: 24px; border:1px solid var(--border); border-radius: 12px; }
-  h1 { font-size: 18px; margin: 0 0 8px; }
-  p { color: var(--muted); line-height: 1.5; margin: 8px 0; }
-  ul { padding-left: 18px; color: var(--fg); }
-  .row { display:flex; gap:8px; margin-top: 24px; }
-  button { flex:1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font: inherit; }
-  button.primary { background: var(--accent); color: white; border-color: transparent; }
-  code { background: rgba(127,127,127,0.12); padding: 2px 5px; border-radius: 4px; font-size: 12px; }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>Authorize <strong>${escapeHtml(client.name)}</strong></h1>
-  <p>Signed in as <strong>${escapeHtml(ctx.displayName)}</strong> (@${escapeHtml(ctx.username)})</p>
-  <p>This integration is requesting access to your Pileo data:</p>
-  <ul>${scopes.map((s) => `<li><code>${escapeHtml(s)}</code></li>`).join('')}</ul>
-  <p>It will redirect to <code>${escapeHtml(ctx.redirect_uri)}</code>.</p>
-  <form method="POST" action="${escapeHtml(`/api/v1/oauth/authorize${queryStringOf(ctx)}`)}">
-    <div class="row">
-      <button name="action" value="deny">Cancel</button>
-      <button name="action" value="approve" class="primary">Authorize</button>
-    </div>
-  </form>
-</div>
-</body>
-</html>`);
-}
-
 function queryStringOf(ctx: AuthorizeParams): string {
   const params = new URLSearchParams({
     response_type: 'code',
@@ -318,13 +274,4 @@ function queryStringOf(ctx: AuthorizeParams): string {
   if (ctx.scope) params.set('scope', ctx.scope);
   if (ctx.resource) params.set('resource', ctx.resource);
   return `?${params.toString()}`;
-}
-
-function renderError(res: Response, error: string, description: string): void {
-  res.status(400).type('html').send(`<!doctype html>
-<html><body style="font:14px system-ui; padding: 24px; max-width: 480px;">
-<h1 style="font-size:18px;">OAuth error</h1>
-<p><strong>${escapeHtml(error)}</strong></p>
-<p style="color:#64748b;">${escapeHtml(description)}</p>
-</body></html>`);
 }

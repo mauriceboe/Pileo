@@ -1,12 +1,12 @@
-import { Controller, Get, HttpStatus, Param, Req, Res } from '@nestjs/common';
+import { Controller, Get, Param, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { shareTokenRateLimit } from '../../middleware/rate-limit.middleware.js';
+import { ShareTokenRateLimitGuard } from '../common/rate-limit.guard.js';
+import { AppError } from '../../utils/errors.js';
 import * as shareService from '../../services/share.service.js';
 
 // Per-token viewer registries shared across requests in this process.
-// The Subject-style approach in Nest's @Sse pattern doesn't fit here —
-// viewers are tracked by token (one Set per token), and the count is
-// fan-out broadcast on every connect/disconnect.
+// Tracks one Set<Response> per token; the count is fan-out broadcast on
+// every connect/disconnect.
 const viewersByToken = new Map<string, Set<Response>>();
 
 function broadcastViewerCount(token: string): void {
@@ -18,10 +18,8 @@ function broadcastViewerCount(token: string): void {
 
 @Controller('api/v1/shared')
 export class SharePublicController {
-  // SSE viewer-tracking endpoint. We talk to Express directly because the
-  // long-lived stream needs raw res.write() — Nest's Observable-based
-  // @Sse abstracts a one-emitter-many-events model, not the broadcast
-  // pattern we need here.
+  // Long-lived SSE stream — uses raw res.write() because Nest's @Sse
+  // is one-emitter-many-events, not broadcast.
   @Get(':token/viewers')
   viewers(@Param('token') token: string, @Req() req: Request, @Res() res: Response): void {
     res.writeHead(200, {
@@ -45,28 +43,11 @@ export class SharePublicController {
     });
   }
 
-  // Public board read. Rate-limited with the same per-IP limiter as the
-  // legacy route — we delegate to the express-rate-limit middleware and
-  // run the service inside its next() callback so the limiter owns the
-  // 429 response shape.
   @Get(':token')
-  async getBoard(
-    @Param('token') token: string,
-    @Req() req: Request,
-    @Res() res: Response,
-  ): Promise<void> {
-    await new Promise<void>((resolve) => {
-      shareTokenRateLimit(req, res, async () => {
-        const data = await shareService.getSharedBoardData(token);
-        if (!data) {
-          res.status(HttpStatus.NOT_FOUND).json({
-            error: { code: 'NOT_FOUND', message: 'Invalid or expired link' },
-          });
-        } else {
-          res.status(HttpStatus.OK).json({ data });
-        }
-        resolve();
-      });
-    });
+  @UseGuards(ShareTokenRateLimitGuard)
+  async getBoard(@Param('token') token: string): Promise<{ data: unknown }> {
+    const data = await shareService.getSharedBoardData(token);
+    if (!data) throw new AppError('Invalid or expired link', 404, 'NOT_FOUND');
+    return { data };
   }
 }

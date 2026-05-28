@@ -1,4 +1,5 @@
 import type { Request } from 'express';
+import { pickBaseUrl } from '../common/url.js';
 import * as apiKeyService from '../../services/api-key.service.js';
 import * as oauthService from '../../services/oauth.service.js';
 
@@ -48,8 +49,5 @@ export async function authenticateMcpRequest(req: Request): Promise<McpAuthResul
 }
 
 function expectedAudience(req: Request): string {
-  const proto = (req.headers['x-forwarded-proto'] as string | undefined) ?? req.protocol;
-  const host = (req.headers['x-forwarded-host'] as string | undefined) ?? req.headers['host'];
-  // The MCP endpoint path is fixed by the controller mount.
-  return `${proto}://${host}/api/v1/mcp`;
+  return `${pickBaseUrl(req)}/api/v1/mcp`;
 }

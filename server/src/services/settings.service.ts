@@ -1,3 +1,6 @@
+// Raw better-sqlite3 — app_settings is a two-column key/value store with
+// no joins or migrations; the drizzle wrapping would be pure ceremony.
+
 import { sqlite } from '../config/database.js';
 
 export function getSetting(key: string): string | null {

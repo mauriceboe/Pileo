@@ -1,3 +1,8 @@
+// Raw better-sqlite3 — custom_fields and task_custom_values are managed
+// outside the main drizzle schema (no entries in db/schema/) because
+// option-array serialisation is JSON-in-TEXT, which drizzle doesn't
+// expose ergonomically.
+
 import { randomUUID } from 'node:crypto';
 import { sqlite } from '../config/database.js';
 import { logger } from '../config/logger.js';

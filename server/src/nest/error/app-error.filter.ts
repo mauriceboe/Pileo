@@ -1,14 +1,13 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import type { Response } from 'express';
 import { AppError } from '../../utils/errors.js';
+import { logger } from '../../config/logger.js';
 
 // Serialises every thrown error to {error:{code,message,details?}}.
 // AppError carries its own status + code; HttpException is mapped through
 // codeForStatus; anything else becomes 500 INTERNAL_SERVER_ERROR.
 @Catch()
 export class AppErrorFilter implements ExceptionFilter {
-  private readonly logger = new Logger('AppErrorFilter');
-
   catch(exception: unknown, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
 
@@ -35,7 +34,7 @@ export class AppErrorFilter implements ExceptionFilter {
       return;
     }
 
-    this.logger.error(`Unhandled error: ${(exception as Error)?.message ?? exception}`);
+    logger.error({ err: exception }, 'Unhandled error');
     res.status(500).json({
       error: { code: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error occurred' },
     });
