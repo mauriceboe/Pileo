@@ -19,6 +19,7 @@ import {
 } from './session-manager.js';
 import { registerTools } from './tools.js';
 import { registerResources } from './resources.js';
+import { RateLimiter } from './rate-limit.js';
 
 // JSON body parser scoped to this controller. The top-level dispatcher in
 // index.ts forwards raw requests to Nest (bodyParser: false), so the MCP
@@ -31,21 +32,8 @@ function parseJson(req: Request, res: Response): Promise<void> {
   });
 }
 
-// Per-user-per-minute rate cap. In-memory, single-instance only — fine for
-// the single-process Pileo deployment; would need Redis if we ever shard.
-const RATE_WINDOW_MS = 60 * 1000;
-const RATE_MAX = 300;
-const rateBuckets = new Map<string, { count: number; windowStart: number }>();
-function isRateLimited(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateBuckets.get(userId);
-  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
-    rateBuckets.set(userId, { count: 1, windowStart: now });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_MAX;
-}
+// Per-user-per-minute rate cap. See rate-limit.ts for the implementation.
+const rateLimiter = new RateLimiter({ windowMs: 60 * 1000, max: 300 });
 
 @Controller('api/v1/mcp')
 export class McpController {
@@ -73,7 +61,7 @@ export class McpController {
     }
     const { userId, projectId } = auth;
 
-    if (isRateLimited(userId)) {
+    if (rateLimiter.isLimited(userId)) {
       res.status(HttpStatus.TOO_MANY_REQUESTS).json({
         error: { code: 'RATE_LIMITED', message: 'Too many requests. Please slow down.' },
       });

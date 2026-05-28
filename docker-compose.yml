@@ -4,15 +4,21 @@ services:
     build: .
     container_name: pileo
     ports:
-      - "3000:3000"
+      - "3003:3003"
     environment:
       - PILEO_SESSION_SECRET=${PILEO_SESSION_SECRET}
+      - PILEO_UPLOAD_DIR=/app/data/uploads
+      - PILEO_TRUST_PROXY=1
+      # Strangler-fig: path prefixes routed to the NestJS app instead of
+      # legacy Express. Override via env to add more prefixes as modules
+      # are migrated, or set to "" to roll back instantly.
+      - PILEO_NEST_PREFIXES=${PILEO_NEST_PREFIXES:-/api/v1/mcp}
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

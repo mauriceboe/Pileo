@@ -38,6 +38,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@swc/core": "^1.15.40",
     "@types/better-sqlite3": "^7.6.11",
     "@types/cookie": "^0.6.0",
     "@types/cookie-signature": "^1.1.2",
@@ -49,6 +50,7 @@
     "@types/ws": "^8.5.12",
     "tsc-alias": "^1.8.10",
     "typescript": "^5.5.0",
+    "unplugin-swc": "^1.5.9",
     "vitest": "^2.1.0"
   }
 }

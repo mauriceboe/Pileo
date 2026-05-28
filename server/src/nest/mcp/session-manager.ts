@@ -13,7 +13,7 @@ const SESSION_TTL_MS = 60 * 60 * 1000; // 1h idle TTL
 const MAX_SESSIONS_PER_USER = 20;
 const SWEEP_INTERVAL_MS = 60 * 1000;
 
-class McpSessionRegistry {
+export class McpSessionRegistry {
   private readonly sessions = new Map<string, McpSession>();
   private sweepHandle: NodeJS.Timeout | null = null;
 
