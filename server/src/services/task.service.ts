@@ -23,6 +23,7 @@ import {
 } from '../utils/errors.js';
 import { getMemberRole, requireRole } from './project.service.js';
 import * as activityService from './activity.service.js';
+import { sanitizeRichText } from '../utils/sanitize-html.js';
 import { broadcastTaskCreated, broadcastTaskUpdated, broadcastTaskDeleted, broadcastTaskMoved } from '../websocket/handlers/task.handler.js';
 import * as customFieldService from './custom-field.service.js';
 import type {
@@ -206,7 +207,7 @@ export async function create(
     .values({
       columnId,
       title: data.title,
-      description: data.description ?? null,
+      description: sanitizeRichText(data.description ?? null),
       position: nextPosition,
       priority: data.priority ?? 'none',
       dueDate: data.dueDate?.toISOString() ?? null,
@@ -438,14 +439,21 @@ export async function update(
     ...data,
     updatedAt: new Date().toISOString(),
   };
+  if (data.description !== undefined) {
+    setData.description = sanitizeRichText(data.description);
+  }
   if (data.dueDate !== undefined) {
     setData.dueDate = data.dueDate?.toISOString() ?? null;
   }
-  if ((data as any).completedAt !== undefined) {
-    setData.completedAt = (data as any).completedAt?.toISOString?.() ?? (data as any).completedAt ?? null;
+  if (data.completedAt !== undefined) {
+    setData.completedAt = data.completedAt instanceof Date
+      ? data.completedAt.toISOString()
+      : data.completedAt ?? null;
   }
-  if ((data as any).rejectedAt !== undefined) {
-    setData.rejectedAt = (data as any).rejectedAt?.toISOString?.() ?? (data as any).rejectedAt ?? null;
+  if (data.rejectedAt !== undefined) {
+    setData.rejectedAt = data.rejectedAt instanceof Date
+      ? data.rejectedAt.toISOString()
+      : data.rejectedAt ?? null;
   }
 
   const updated = await db
@@ -477,16 +485,16 @@ export async function update(
       changes.dueDate = { oldValue: oldDue, newValue: newDue };
     }
   }
-  if ((data as any).completedAt !== undefined) {
-    const oldCompleted = (old as any).completedAt ?? null;
-    const newCompleted = (data as any).completedAt ?? null;
+  if (data.completedAt !== undefined) {
+    const oldCompleted = old.completedAt ?? null;
+    const newCompleted = data.completedAt ?? null;
     if (!!oldCompleted !== !!newCompleted) {
       changes.completedAt = { oldValue: oldCompleted, newValue: newCompleted };
     }
   }
-  if ((data as any).rejectedAt !== undefined) {
-    const oldRejected = (old as any).rejectedAt ?? null;
-    const newRejected = (data as any).rejectedAt ?? null;
+  if (data.rejectedAt !== undefined) {
+    const oldRejected = old.rejectedAt ?? null;
+    const newRejected = data.rejectedAt ?? null;
     if (!!oldRejected !== !!newRejected) {
       changes.rejectedAt = { oldValue: oldRejected, newValue: newRejected };
     }

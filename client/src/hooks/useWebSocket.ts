@@ -4,7 +4,15 @@ import type { WebSocketEventName, Column, Notification } from '@pileo/shared';
 import { useWebSocketStore } from '../stores/websocket.store';
 import { useBoardStore } from '../stores/board.store';
 import { useNotificationStore } from '../stores/notification.store';
-// tasks.api imported dynamically in event handlers
+import * as tasksApi from '../api/tasks.api';
+
+function refetchTasksForCurrentBoard(): void {
+  const board = useBoardStore.getState().board;
+  if (!board) return;
+  tasksApi.listTasks(board.id).then((tasksByColumn) => {
+    useBoardStore.setState({ tasksByColumn });
+  });
+}
 
 const MAX_RECONNECT_DELAY_MS = 30_000;
 const BASE_RECONNECT_DELAY_MS = 1_000;
@@ -50,61 +58,21 @@ export function useWebSocket(boardId: string | undefined): void {
       if (msgBoardId && currentBoardId && msgBoardId !== currentBoardId) return;
 
       switch (event as WebSocketEventName | 'presence:list' | 'error') {
-        case WEBSOCKET_EVENTS.TASK_CREATED: {
-          const boardForCreate = useBoardStore.getState().board;
-          if (boardForCreate) {
-            import('../api/tasks.api').then((tasksApi) => {
-              tasksApi.listTasks(boardForCreate.id).then((tasksByColumn) => {
-                useBoardStore.setState({ tasksByColumn });
-              });
-            });
-          }
-          break;
-        }
-
-        case WEBSOCKET_EVENTS.TASK_UPDATED: {
-          // Re-fetch all tasks to get correct counts (links, comments, checklists, etc.)
-          const boardForUpdate = useBoardStore.getState().board;
-          if (boardForUpdate) {
-            import('../api/tasks.api').then((tasksApi) => {
-              tasksApi.listTasks(boardForUpdate.id).then((tasksByColumn) => {
-                useBoardStore.setState({ tasksByColumn });
-              });
-            });
-          }
+        case WEBSOCKET_EVENTS.TASK_CREATED:
+        case WEBSOCKET_EVENTS.TASK_UPDATED:
+        case WEBSOCKET_EVENTS.TASK_MOVED: {
+          refetchTasksForCurrentBoard();
           break;
         }
 
         case WEBSOCKET_EVENTS.TASK_DELETED: {
           const { taskId } = payload as { taskId: string };
-          // Close detail if deleted task was open
           useBoardStore.setState((state) => ({
             isTaskDetailOpen: state.selectedTaskId === taskId ? false : state.isTaskDetailOpen,
             selectedTaskId: state.selectedTaskId === taskId ? null : state.selectedTaskId,
             selectedTask: state.selectedTaskId === taskId ? null : state.selectedTask,
-            }));
-          // Re-fetch tasks
-          const boardForDelete = useBoardStore.getState().board;
-          if (boardForDelete) {
-            import('../api/tasks.api').then((tasksApi) => {
-              tasksApi.listTasks(boardForDelete.id).then((tasksByColumn) => {
-                useBoardStore.setState({ tasksByColumn });
-              });
-            });
-          }
-          break;
-        }
-
-        case WEBSOCKET_EVENTS.TASK_MOVED: {
-          // Re-fetch all tasks to get correct completedAt from column rules
-          const board = useBoardStore.getState().board;
-          if (board) {
-            import('../api/tasks.api').then((tasksApi) => {
-              tasksApi.listTasks(board.id).then((tasksByColumn) => {
-                useBoardStore.setState({ tasksByColumn });
-              });
-            });
-          }
+          }));
+          refetchTasksForCurrentBoard();
           break;
         }
 

@@ -1,0 +1,58 @@
+name: Tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Server (NestJS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run build --workspace=@pileo/shared
+      - run: npm test --workspace=@pileo/server
+      - run: npm run typecheck --workspace=@pileo/server
+
+  client:
+    name: Client (React 19)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run build --workspace=@pileo/shared
+      - run: npm test --workspace=@pileo/client
+      - run: npm run build --workspace=@pileo/client
+
+  coverage:
+    name: Coverage report
+    runs-on: ubuntu-latest
+    needs: [server, client]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run build --workspace=@pileo/shared
+      - run: npm run test:coverage --workspace=@pileo/client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: client/coverage/

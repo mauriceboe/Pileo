@@ -79,3 +79,22 @@ export {
   notificationSchema,
   markNotificationReadSchema,
 } from "./notification.schema.js";
+
+export {
+  taskLabelViewSchema,
+  taskAssigneeViewSchema,
+  taskCustomBadgeSchema,
+  taskWithRelationsSchema,
+  boardTasksSchema,
+  taskContextSchema,
+  bulkTaskResultSchema,
+  boardWithColumnsSchema,
+  commentAuthorSchema,
+  commentWithAuthorSchema,
+  dashboardStatsSchema,
+  userTaskSchema,
+  projectMemberUserSchema,
+  projectMemberWithUserSchema,
+  registrationStatusSchema,
+  appSettingsSchema,
+} from "./api-responses.schema.js";

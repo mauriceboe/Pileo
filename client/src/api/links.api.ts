@@ -1,13 +1,7 @@
-import type { ApiSuccessResponse } from '@pileo/shared';
+import type { ApiSuccessResponse, TaskLink } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface TaskLink {
-  id: string;
-  taskId: string;
-  url: string;
-  createdAt: string;
-  createdBy: string | null;
-}
+export type { TaskLink };
 
 export async function listLinks(taskId: string): Promise<TaskLink[]> {
   const response = await apiClient.get<ApiSuccessResponse<TaskLink[]>>(

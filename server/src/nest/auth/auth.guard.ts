@@ -20,11 +20,10 @@ export class PileoAuthGuard implements CanActivate {
       return true;
     }
 
-    const session = req.session as unknown as Record<string, unknown> | undefined;
-    if (!session || !session['userId'] || !session['user']) {
+    if (!req.session?.userId || !req.session.user) {
       throw new UnauthorizedError();
     }
-    req.user = session['user'] as UserPublic;
+    req.user = req.session.user;
     return true;
   }
 }

@@ -52,7 +52,7 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
     }
     try {
       const updated = await boardsApi.updateBoard(board.id, { name: trimmed });
-      if (setBoard) setBoard(updated);
+      if (setBoard) setBoard({ ...board, ...updated });
       if (selectedProject) fetchBoardsForProject(selectedProject.id);
     } catch {}
     setIsEditingBoard(false);

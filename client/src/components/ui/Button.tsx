@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, Ref } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 import styles from './button.module.css';
 
@@ -9,47 +9,44 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  ref?: Ref<HTMLButtonElement>;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  function Button(
-    {
-      variant = 'primary',
-      size = 'md',
-      loading = false,
-      disabled,
-      className,
-      children,
-      ...rest
-    },
-    ref,
-  ) {
-    const classNames = [
-      styles.button,
-      styles[variant],
-      styles[size],
-      loading ? styles.loading : '',
-      className ?? '',
-    ]
-      .filter(Boolean)
-      .join(' ');
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  disabled,
+  className,
+  children,
+  ref,
+  ...rest
+}: ButtonProps) {
+  const classNames = [
+    styles.button,
+    styles[variant],
+    styles[size],
+    loading ? styles.loading : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-    return (
-      <button
-        ref={ref}
-        className={classNames}
-        disabled={disabled || loading}
-        {...rest}
-      >
-        {loading && (
-          <span className={styles.spinnerWrapper}>
-            <LoadingSpinner size="sm" />
-          </span>
-        )}
-        <span className={`${styles.content} ${loading ? styles.hiddenContent : ''}`}>
-          {children}
+  return (
+    <button
+      ref={ref}
+      className={classNames}
+      disabled={disabled || loading}
+      {...rest}
+    >
+      {loading && (
+        <span className={styles.spinnerWrapper}>
+          <LoadingSpinner size="sm" />
         </span>
-      </button>
-    );
-  },
-);
+      )}
+      <span className={`${styles.content} ${loading ? styles.hiddenContent : ''}`}>
+        {children}
+      </span>
+    </button>
+  );
+}

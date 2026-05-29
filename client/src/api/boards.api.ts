@@ -1,6 +1,7 @@
 import type {
   ApiSuccessResponse,
   Board,
+  BoardWithColumns,
   CreateBoardInput,
   UpdateBoardInput,
   Column,
@@ -10,9 +11,7 @@ import type {
 } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface BoardWithColumns extends Board {
-  columns: Column[];
-}
+export type { BoardWithColumns };
 
 export async function listBoards(projectId: string): Promise<Board[]> {
   const response = await apiClient.get<ApiSuccessResponse<Board[]>>(

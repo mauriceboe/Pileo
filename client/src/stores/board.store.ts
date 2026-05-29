@@ -5,6 +5,14 @@ import type { TaskWithRelations, BoardTasks } from '../api/tasks.api';
 import * as boardsApi from '../api/boards.api';
 import * as tasksApi from '../api/tasks.api';
 import * as labelsApi from '../api/labels.api';
+import { useWebSocketStore } from './websocket.store';
+
+function broadcastTaskFocus(taskId: string | null): void {
+  const ws = useWebSocketStore.getState().wsInstance;
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ action: 'presence:task:focus', payload: { taskId } }));
+  }
+}
 
 interface BoardState {
   board: BoardWithColumns | null;
@@ -16,7 +24,7 @@ interface BoardState {
   selectedTask: TaskWithRelations | null;
   isTaskDetailOpen: boolean;
 
-  setBoard: (board: any) => void;
+  setBoard: (board: BoardWithColumns | null) => void;
   fetchBoard: (boardId: string) => Promise<void>;
   fetchTasks: (boardId: string) => Promise<void>;
   fetchProjectLabels: (projectId: string) => Promise<void>;
@@ -56,7 +64,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   selectedTask: null,
   isTaskDetailOpen: false,
 
-  setBoard: (board: any): void => { set({ board }); },
+  setBoard: (board: BoardWithColumns | null): void => { set({ board }); },
 
   fetchBoard: async (boardId: string): Promise<void> => {
     set({ isLoading: true, error: null, tasksByColumn: {} });
@@ -297,14 +305,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   openTaskDetail: (taskId: string): void => {
     set({ selectedTaskId: taskId, isTaskDetailOpen: true, selectedTask: null });
-    // Broadcast focus to other users
-    import('./websocket.store').then(({ useWebSocketStore }) => {
-      const ws = useWebSocketStore.getState().wsInstance;
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ action: 'presence:task:focus', payload: { taskId } }));
-      }
-    });
-    // Fetch the full task detail
+    broadcastTaskFocus(taskId);
     tasksApi.getTask(taskId).then((task) => {
       set((state) => {
         if (state.selectedTaskId !== taskId) return state;
@@ -335,13 +336,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
 
     set({ isTaskDetailOpen: false, selectedTaskId: null, selectedTask: null });
-    // Broadcast unfocus
-    import('./websocket.store').then(({ useWebSocketStore }) => {
-      const ws = useWebSocketStore.getState().wsInstance;
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ action: 'presence:task:focus', payload: { taskId: null } }));
-      }
-    });
+    broadcastTaskFocus(null);
   },
 
   refreshTaskDetail: async (taskId: string): Promise<void> => {

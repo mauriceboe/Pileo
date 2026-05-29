@@ -68,6 +68,15 @@
   margin-left: 4px;
 }
 
+.versionBadge {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
+  vertical-align: middle;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
 .topRight {
   display: flex;
   align-items: center;

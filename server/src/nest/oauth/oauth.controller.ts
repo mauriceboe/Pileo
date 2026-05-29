@@ -67,8 +67,7 @@ export class OauthController {
     @Body(new ZodValidationPipe(registerSchema)) body: RegisterBody,
     @Req() req: Request,
   ): Promise<Record<string, unknown>> {
-    const session = req.session as unknown as Record<string, unknown> | undefined;
-    const userId = (session?.['user'] as { id?: string } | undefined)?.id ?? null;
+    const userId = req.session?.user?.id ?? null;
     const client = await oauthService.registerClient(
       {
         name: body.client_name,
@@ -107,12 +106,11 @@ export class OauthController {
       res.status(400).type('html').send(renderError(params.error, params.error_description));
       return;
     }
-    const session = req.session as unknown as Record<string, unknown> | undefined;
-    if (!session?.['user']) {
+    const user = req.session?.user;
+    if (!user) {
       res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
       return;
     }
-    const user = session['user'] as { displayName?: string; username?: string };
     const client = oauthService.getClient(params.client_id)!;
     const scopes = params.scope ? params.scope.split(' ').filter(Boolean) : ['mcp.read', 'mcp.write'];
     res.type('html').send(renderConsent({
@@ -132,8 +130,7 @@ export class OauthController {
       res.status(400).type('html').send(renderError(params.error, params.error_description));
       return;
     }
-    const session = req.session as unknown as Record<string, unknown> | undefined;
-    const user = session?.['user'] as { id: string } | undefined;
+    const user = req.session?.user;
     if (!user) {
       res.redirect('/login');
       return;

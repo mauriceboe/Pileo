@@ -77,9 +77,8 @@ export async function register(
   const user = inserted[0]!;
   const publicUser = stripPasswordHash(user);
 
-  const session = req.session as unknown as Record<string, unknown>;
-  session.userId = user.id;
-  session.user = publicUser;
+  req.session.userId = user.id;
+  req.session.user = publicUser;
 
   logger.info({ userId: user.id }, 'User registered');
   return publicUser;
@@ -104,9 +103,8 @@ export async function login(
   }
 
   // Account lockout: track failed attempts via session store
-  const session = req.session as unknown as Record<string, unknown>;
-  const failedAttempts = (session.failedLoginAttempts as number | undefined) ?? 0;
-  const lockoutUntil = session.lockoutUntil as number | undefined;
+  const failedAttempts = req.session.failedLoginAttempts ?? 0;
+  const lockoutUntil = req.session.lockoutUntil;
 
   if (lockoutUntil && Date.now() < lockoutUntil) {
     const remainingSeconds = Math.ceil((lockoutUntil - Date.now()) / 1000);
@@ -116,19 +114,19 @@ export async function login(
   }
 
   if (lockoutUntil && Date.now() >= lockoutUntil) {
-    session.failedLoginAttempts = 0;
-    session.lockoutUntil = undefined;
+    req.session.failedLoginAttempts = 0;
+    req.session.lockoutUntil = undefined;
   }
 
   const isValidPassword = await argon2.verify(user.passwordHash, validated.password);
 
   if (!isValidPassword) {
     const newFailedAttempts = failedAttempts + 1;
-    session.failedLoginAttempts = newFailedAttempts;
+    req.session.failedLoginAttempts = newFailedAttempts;
 
     if (newFailedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
-      session.lockoutUntil = Date.now() + ACCOUNT_LOCKOUT_DURATION_MS;
-      session.failedLoginAttempts = 0;
+      req.session.lockoutUntil = Date.now() + ACCOUNT_LOCKOUT_DURATION_MS;
+      req.session.failedLoginAttempts = 0;
       logger.warn({ email: validated.email }, 'Account locked due to too many failed login attempts');
       throw new UnauthorizedError('Too many failed login attempts. Account temporarily locked for 15 minutes');
     }
@@ -137,8 +135,8 @@ export async function login(
   }
 
   // Successful login: reset failed attempts
-  session.failedLoginAttempts = 0;
-  session.lockoutUntil = undefined;
+  req.session.failedLoginAttempts = 0;
+  req.session.lockoutUntil = undefined;
 
   await db
     .update(users)
@@ -146,8 +144,8 @@ export async function login(
     .where(eq(users.id, user.id));
 
   const publicUser = stripPasswordHash({ ...user, lastLoginAt: new Date().toISOString() });
-  session.userId = user.id;
-  session.user = publicUser;
+  req.session.userId = user.id;
+  req.session.user = publicUser;
 
   logger.info({ userId: user.id }, 'User logged in');
   return publicUser;

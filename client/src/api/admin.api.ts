@@ -1,14 +1,13 @@
 import type {
   ApiSuccessResponse,
+  AppSettings,
   UserPublic,
   AdminCreateUserInput,
   AdminUpdateRoleInput,
 } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface AppSettings {
-  registrationEnabled: boolean;
-}
+export type { AppSettings };
 
 export async function getSettings(): Promise<AppSettings> {
   const response = await apiClient.get<ApiSuccessResponse<AppSettings>>('/admin/settings');

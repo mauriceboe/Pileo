@@ -1,15 +1,5 @@
+import type { ApiSuccessResponse, ActivityEntry } from '@pileo/shared';
 import { apiClient } from './client';
-import type { ApiSuccessResponse } from '@pileo/shared';
-
-interface ActivityEntry {
-  id: string;
-  projectId: string;
-  taskId: string | null;
-  userId: string;
-  action: string;
-  details: string | null;
-  createdAt: string;
-}
 
 export type { ActivityEntry };
 

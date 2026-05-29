@@ -8,7 +8,12 @@ COPY packages/shared/package.json ./packages/shared/
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 
-RUN npm ci
+# Cross-platform lockfile workaround: a lockfile generated on Windows omits
+# Linux-specific platform binaries (e.g. @rollup/rollup-linux-x64-musl).
+# Drop the lockfile inside the image so npm install resolves the full
+# dependency tree fresh for the build platform. The host lockfile is still
+# used for local development reproducibility.
+RUN rm -f package-lock.json && npm install --no-audit --no-fund
 
 COPY packages/ ./packages/
 COPY server/ ./server/
@@ -29,7 +34,7 @@ COPY packages/shared/package.json ./packages/shared/
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 
-RUN npm ci --omit=dev
+RUN rm -f package-lock.json && npm install --omit=dev --no-audit --no-fund
 
 RUN addgroup -g 1001 -S pileo && \
     adduser -S pileo -u 1001 -G pileo

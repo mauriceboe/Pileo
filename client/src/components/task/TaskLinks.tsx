@@ -44,7 +44,7 @@ export function TaskLinks({ taskId }: TaskLinksProps) {
       setShowForm(false);
       if (board) fetchTasks(board.id);
     } catch {
-      // TODO: show toast on error
+      // Errors are surfaced as global API-client errors; the link form stays open
     }
   };
 
@@ -54,7 +54,7 @@ export function TaskLinks({ taskId }: TaskLinksProps) {
       setLinks((prev) => prev.filter((l) => l.id !== id));
       if (board) fetchTasks(board.id);
     } catch {
-      // TODO: show toast on error
+      // Errors are surfaced as global API-client errors; the link form stays open
     }
   };
 

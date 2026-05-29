@@ -26,7 +26,7 @@ export function TaskDueDate({ taskId, dueDate, isCompleted, isRejected }: TaskDu
     await updateTask(taskId, { dueDate: newDate });
   };
 
-  const handleClear = async (event: React.MouseEvent) => {
+  const handleClear = async (event: React.MouseEvent | React.KeyboardEvent) => {
     event.stopPropagation();
     await updateTask(taskId, { dueDate: null });
   };
@@ -67,7 +67,7 @@ export function TaskDueDate({ taskId, dueDate, isCompleted, isRejected }: TaskDu
               tabIndex={0}
               className={styles.clearButton}
               onClick={handleClear}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleClear(e as unknown as React.MouseEvent); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleClear(e); }}
               aria-label="Clear due date"
             >
               <X size={12} />

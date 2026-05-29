@@ -13,6 +13,7 @@ import { logger } from '../config/logger.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { getMemberRole, requireRole } from './project.service.js';
 import * as activityService from './activity.service.js';
+import { sanitizeRichText } from '../utils/sanitize-html.js';
 import { broadcastToBoard } from '../websocket/broadcast.js';
 import { WEBSOCKET_EVENTS } from '@pileo/shared';
 
@@ -85,7 +86,7 @@ export async function create(
     .values({
       taskId,
       authorId: userId,
-      content,
+      content: sanitizeRichText(content) ?? '',
     })
     .returning();
 
@@ -234,7 +235,10 @@ export async function update(
 
   const updated = await db
     .update(comments)
-    .set({ content, updatedAt: new Date().toISOString() })
+    .set({
+      content: sanitizeRichText(content) ?? '',
+      updatedAt: new Date().toISOString(),
+    })
     .where(eq(comments.id, commentId))
     .returning();
 

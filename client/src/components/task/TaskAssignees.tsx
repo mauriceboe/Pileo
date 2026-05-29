@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Check, X } from 'lucide-react';
-import type { UserPublic } from '@pileo/shared';
+import type { TaskAssigneeView } from '@pileo/shared';
 import { useBoardStore } from '../../stores/board.store';
 import { useProjectStore } from '../../stores/project.store';
 import { Avatar } from '../ui/Avatar';
@@ -8,7 +8,7 @@ import styles from './task-assignees.module.css';
 
 interface TaskAssigneesProps {
   taskId: string;
-  assignees: UserPublic[];
+  assignees: TaskAssigneeView[];
 }
 
 export function TaskAssignees({ taskId, assignees }: TaskAssigneesProps) {
@@ -18,7 +18,7 @@ export function TaskAssignees({ taskId, assignees }: TaskAssigneesProps) {
   const updateTaskAssignees = useBoardStore((state) => state.updateTaskAssignees);
   const projectMembers = useProjectStore((state) => state.members);
 
-  const assignedIds = new Set(assignees.map((assignee) => (assignee as any).userId ?? assignee.id));
+  const assignedIds = new Set(assignees.map((assignee) => assignee.userId));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -46,13 +46,13 @@ export function TaskAssignees({ taskId, assignees }: TaskAssigneesProps) {
       {assignees.length > 0 && (
         <div className={styles.assignees}>
           {assignees.map((assignee) => (
-            <div key={(assignee as any).userId ?? assignee.id} className={styles.assigneeChip}>
+            <div key={assignee.userId} className={styles.assigneeChip}>
               <Avatar name={assignee.displayName} src={assignee.avatarPath} size="sm" />
               <span>{assignee.displayName}</span>
               <button
                 type="button"
                 className={styles.removeButton}
-                onClick={() => handleToggleMember((assignee as any).userId ?? assignee.id)}
+                onClick={() => handleToggleMember(assignee.userId)}
               >
                 <X size={10} />
               </button>

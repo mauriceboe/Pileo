@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useBoardStore } from '../../stores/board.store';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
+import { useTaskDetailFromUrl } from '../../hooks/useTaskDetailFromUrl';
 import { Column } from './Column';
 import { AddColumnButton } from './AddColumnButton';
 import { TaskCard } from './TaskCard';
@@ -31,6 +32,9 @@ export function BoardView() {
   const { board, isLoading, error, isTaskDetailOpen } = useBoardStore();
   const fetchTasks = useBoardStore((state) => state.fetchTasks);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Pick up `?task=<id>` from the URL and open detail once the board + tasks load.
+  useTaskDetailFromUrl();
 
   useEffect(() => {
     const el = containerRef.current;

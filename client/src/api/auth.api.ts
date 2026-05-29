@@ -4,6 +4,7 @@ import type {
   RegisterInput,
   ForgotPasswordInput,
   ResetPasswordInput,
+  RegistrationStatus,
   UserPublic,
 } from '@pileo/shared';
 import { apiClient } from './client';
@@ -39,6 +40,13 @@ export async function resetPassword(input: ResetPasswordInput): Promise<void> {
 export async function getCurrentUser(): Promise<UserPublic> {
   const response = await apiClient.get<ApiSuccessResponse<UserPublic>>(
     '/auth/me',
+  );
+  return response.data;
+}
+
+export async function getRegistrationStatus(): Promise<RegistrationStatus> {
+  const response = await apiClient.get<ApiSuccessResponse<RegistrationStatus>>(
+    '/auth/registration-status',
   );
   return response.data;
 }

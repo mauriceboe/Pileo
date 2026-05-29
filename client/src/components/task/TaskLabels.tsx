@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Check, X, Trash2 } from 'lucide-react';
-import type { Label } from '@pileo/shared';
+import type { TaskLabelView } from '@pileo/shared';
 import { useBoardStore } from '../../stores/board.store';
 import { useProjectStore } from '../../stores/project.store';
 import * as labelsApi from '../../api/labels.api';
@@ -16,7 +16,7 @@ const LABEL_COLORS = [
 
 interface TaskLabelsProps {
   taskId: string;
-  labels: Label[];
+  labels: TaskLabelView[];
 }
 
 export function TaskLabels({ taskId, labels }: TaskLabelsProps) {
@@ -29,7 +29,7 @@ export function TaskLabels({ taskId, labels }: TaskLabelsProps) {
   const { projectLabels, updateTaskLabels, fetchProjectLabels } = useBoardStore();
   const selectedProject = useProjectStore((state) => state.selectedProject);
 
-  const activeIds = new Set(labels.map((l) => (l as any).labelId ?? l.id));
+  const activeIds = new Set(labels.map((l) => l.labelId));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -78,12 +78,12 @@ export function TaskLabels({ taskId, labels }: TaskLabelsProps) {
       {labels.length > 0 && (
         <div className={styles.labels}>
           {labels.map((label) => (
-            <span key={(label as any).labelId ?? label.id} className={styles.labelChip}>
+            <span key={label.labelId} className={styles.labelChip}>
               <Badge color={label.color}>{label.name}</Badge>
               <button
                 type="button"
                 className={styles.removeChip}
-                onClick={() => handleToggleLabel((label as any).labelId ?? label.id)}
+                onClick={() => handleToggleLabel(label.labelId)}
                 aria-label={`Remove ${label.name}`}
               >
                 <X size={10} />

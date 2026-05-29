@@ -5,12 +5,13 @@ import {
   Layers, Mail, Map, Megaphone, Palette, Play, Search, Send, Settings,
   Smile, Sparkles, ThumbsUp, TrendingUp, Upload, Users, CheckSquare, X,
   GripVertical,
+  type LucideIcon,
 } from 'lucide-react';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 import { Dropdown } from '../ui/Dropdown';
 import styles from './column-header.module.css';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ICON_MAP: Record<string, any> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   check: Check, checkCircle: CheckCircle, star: Star, heart: Heart,
   thumbsUp: ThumbsUp, smile: Smile, sparkles: Sparkles, zap: Zap,
   rocket: Rocket, target: Target, flag: Flag, play: Play,
@@ -31,8 +32,7 @@ interface ColumnHeaderProps {
   selectionMode?: boolean;
   selectedCount?: number;
   allSelected?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dragListeners?: any;
+  dragListeners?: SyntheticListenerMap;
   onEdit: () => void;
   onDelete: () => void;
   onToggleSelectionMode?: () => void;

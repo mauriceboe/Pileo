@@ -1,30 +1,27 @@
 import type {
   ApiSuccessResponse,
-  Task,
   CreateTaskInput,
   UpdateTaskInput,
   MoveTaskInput,
   UpdateTaskAssigneesInput,
   UpdateTaskLabelsInput,
-  Label,
-  UserPublic,
+  TaskWithRelations,
+  TaskLabelView,
+  TaskAssigneeView,
+  TaskContext,
+  BoardTasks,
+  BulkTaskResult,
 } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface TaskWithRelations extends Task {
-  labels: Label[];
-  assignees: UserPublic[];
-  commentCount: number;
-  checklistTotal: number;
-  checklistCompleted: number;
-  attachmentCount: number;
-  linkCount: number;
-  customBadges?: Array<{ fieldName: string; value: string }>;
-}
-
-export interface BoardTasks {
-  [columnId: string]: TaskWithRelations[];
-}
+export type {
+  TaskWithRelations,
+  TaskLabelView,
+  TaskAssigneeView,
+  TaskContext,
+  BoardTasks,
+  BulkTaskResult,
+};
 
 export async function listTasks(boardId: string): Promise<BoardTasks> {
   const response = await apiClient.get<ApiSuccessResponse<BoardTasks>>(
@@ -42,12 +39,6 @@ export async function createTask(
     input,
   );
   return response.data;
-}
-
-export interface TaskContext {
-  taskId: string;
-  boardId: string;
-  projectId: string;
 }
 
 export async function getTaskContext(taskId: string): Promise<TaskContext> {
@@ -84,12 +75,6 @@ export async function moveTask(
   input: MoveTaskInput,
 ): Promise<void> {
   await apiClient.patch(`/tasks/${taskId}/move`, input);
-}
-
-export interface BulkTaskResult {
-  moved?: number;
-  duplicated?: number;
-  affectedBoardIds: string[];
 }
 
 export async function bulkMoveTasks(

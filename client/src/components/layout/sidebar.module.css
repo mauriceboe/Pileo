@@ -47,6 +47,16 @@
   margin-left: 4px;
 }
 
+.versionBadge {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  vertical-align: middle;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
 .toggleButton {
   display: flex;
   align-items: center;

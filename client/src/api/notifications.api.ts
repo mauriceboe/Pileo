@@ -1,21 +1,14 @@
+import type { ApiSuccessResponse, Notification, NotificationsListResponse } from '@pileo/shared';
 import { apiClient } from './client';
-import type { Notification } from '@pileo/shared';
 
-interface NotificationsResponse {
-  data: Notification[];
-  unreadCount: number;
-}
+export type { NotificationsListResponse };
 
-interface NotificationResponse {
-  data: Notification;
-}
-
-export async function listNotifications(): Promise<NotificationsResponse> {
-  return apiClient.get<NotificationsResponse>('/notifications');
+export async function listNotifications(): Promise<NotificationsListResponse> {
+  return apiClient.get<NotificationsListResponse>('/notifications');
 }
 
 export async function markRead(notificationId: string): Promise<Notification> {
-  const response = await apiClient.patch<NotificationResponse>(
+  const response = await apiClient.patch<ApiSuccessResponse<Notification>>(
     `/notifications/${notificationId}/read`,
   );
   return response.data;

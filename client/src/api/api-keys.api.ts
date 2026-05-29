@@ -1,25 +1,15 @@
+import type { ApiSuccessResponse, ApiKeyPublic, ApiKeyCreateResponse } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface ApiKeyPublic {
-  id: string;
-  name: string;
-  keyPrefix: string;
-  lastUsedAt: string | null;
-  createdAt: string;
-}
-
-interface ApiKeyCreateResponse {
-  key: ApiKeyPublic;
-  rawKey: string;
-}
+export type { ApiKeyPublic, ApiKeyCreateResponse };
 
 export async function listApiKeys(projectId: string): Promise<ApiKeyPublic[]> {
-  const res = await apiClient.get<{ data: ApiKeyPublic[] }>(`/projects/${projectId}/api-keys`);
+  const res = await apiClient.get<ApiSuccessResponse<ApiKeyPublic[]>>(`/projects/${projectId}/api-keys`);
   return res.data;
 }
 
 export async function createApiKey(projectId: string, name: string): Promise<ApiKeyCreateResponse> {
-  const res = await apiClient.post<{ data: ApiKeyCreateResponse }>(`/projects/${projectId}/api-keys`, { name });
+  const res = await apiClient.post<ApiSuccessResponse<ApiKeyCreateResponse>>(`/projects/${projectId}/api-keys`, { name });
   return res.data;
 }
 

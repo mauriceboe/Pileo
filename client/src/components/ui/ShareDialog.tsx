@@ -8,7 +8,7 @@ import { useBoardStore } from '../../stores/board.store';
 import * as projectsApi from '../../api/projects.api';
 import * as adminApi from '../../api/admin.api';
 import * as shareApi from '../../api/share.api';
-import type { ProjectMember, UserPublic } from '@pileo/shared';
+import type { ProjectMemberWithUser, UserPublic } from '@pileo/shared';
 import styles from './share-dialog.module.css';
 
 interface ShareDialogProps {
@@ -20,7 +20,7 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
   const selectedProject = useProjectStore((s) => s.selectedProject);
   const currentUser = useAuthStore((s) => s.user);
   const board = useBoardStore((s) => s.board);
-  const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [members, setMembers] = useState<ProjectMemberWithUser[]>([]);
   const [allUsers, setAllUsers] = useState<UserPublic[]>([]);
   const [error, setError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -53,8 +53,9 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
     try {
       const member = await projectsApi.addMember(selectedProject.id, { email: userEmail, role: 'member' });
       setMembers((prev) => [...prev, member]);
-    } catch (err: any) {
-      setError(err?.message ?? 'Could not add user.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not add user.';
+      setError(message);
     } finally {
       setIsAdding(false);
     }
@@ -150,10 +151,10 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
         <div className={styles.memberList}>
           {members.map((m) => (
             <div key={m.userId} className={styles.memberRow}>
-              <Avatar name={(m as any).user?.displayName ?? 'User'} src={(m as any).user?.avatarPath} size="sm" />
+              <Avatar name={m.user?.displayName ?? 'User'} src={m.user?.avatarPath ?? null} size="sm" />
               <div className={styles.memberInfo}>
-                <span className={styles.memberName}>{(m as any).user?.displayName ?? (m as any).user?.username ?? 'User'}</span>
-                <span className={styles.memberEmail}>{(m as any).user?.email ?? ''}</span>
+                <span className={styles.memberName}>{m.user?.displayName ?? m.user?.username ?? 'User'}</span>
+                <span className={styles.memberEmail}>{m.user?.email ?? ''}</span>
               </div>
               <span className={styles.memberRole}>
                 {m.role === 'owner' ? <Crown size={12} /> : <UserIcon size={12} />}

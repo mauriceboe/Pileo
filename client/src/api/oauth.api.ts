@@ -1,18 +1,7 @@
+import type { OAuthClient, OAuthClientCreateResult, ApiSuccessResponse } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface OAuthClient {
-  id: string;
-  name: string;
-  redirectUris: string[];
-  isPublic: boolean;
-  createdBy: string;
-  createdAt: string;
-}
-
-export interface OAuthClientCreateResult {
-  client: OAuthClient;
-  clientSecret: string | null;
-}
+export type { OAuthClient, OAuthClientCreateResult };
 
 interface RegisterResponse {
   client_id: string;
@@ -24,7 +13,7 @@ interface RegisterResponse {
 }
 
 export async function listOAuthClients(): Promise<OAuthClient[]> {
-  const res = await apiClient.get<{ data: OAuthClient[] }>('/oauth/clients');
+  const res = await apiClient.get<ApiSuccessResponse<OAuthClient[]>>('/oauth/clients');
   return res.data;
 }
 

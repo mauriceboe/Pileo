@@ -11,20 +11,14 @@ import {
 } from 'lucide-react';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
-import { useNavigate } from 'react-router-dom';
+import { useLogout } from '../hooks/useLogout';
 import { format } from 'date-fns';
 import styles from './profile-page.module.css';
 
 export function ProfilePage() {
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
   const projects = useProjectStore((state) => state.projects);
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
+  const handleLogout = useLogout();
 
   const memberSince = user?.createdAt
     ? format(new Date(user.createdAt), 'MMMM yyyy')

@@ -1,9 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, type ChangeEvent } from 'react';
 import { User, Mail, Calendar, FolderKanban, Camera, Pencil, Check, X } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { useProjectStore } from '../../stores/project.store';
-import { apiClient } from '../../api/client';
-import type { ApiSuccessResponse, UserPublic } from '@pileo/shared';
+import * as usersApi from '../../api/users.api';
 import { Avatar } from './Avatar';
 import { Dialog } from './Dialog';
 import styles from './profile-dialog.module.css';
@@ -31,23 +30,16 @@ export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      const res = await fetch('/api/v1/users/me/avatar', {
-        method: 'PATCH',
-        body: formData,
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const body = await res.json();
-        setUser(body.data);
-      }
-    } catch {} finally {
+      const updated = await usersApi.uploadAvatar(file);
+      setUser(updated);
+    } catch {
+      // Errors surfaced by API layer
+    } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -66,10 +58,12 @@ export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
     }
     setIsSavingName(true);
     try {
-      const res = await apiClient.patch<ApiSuccessResponse<UserPublic>>('/users/me', { displayName: trimmed });
-      setUser(res.data);
+      const updated = await usersApi.updateProfile({ displayName: trimmed });
+      setUser(updated);
       setEditingName(false);
-    } catch {} finally {
+    } catch {
+      // Errors surfaced by API layer
+    } finally {
       setIsSavingName(false);
     }
   };

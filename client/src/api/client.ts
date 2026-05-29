@@ -23,12 +23,12 @@ export class ApiRequestError extends Error {
 async function parseErrorResponse(response: Response): Promise<ApiError> {
   try {
     const body = await response.json();
-    if (body.error && typeof body.error.code === 'string') {
+    if (body?.error && typeof body.error.code === 'string') {
       return body.error as ApiError;
     }
     return {
       code: 'UNKNOWN_ERROR',
-      message: body.message || response.statusText,
+      message: body?.message ?? response.statusText,
     };
   } catch {
     return {
@@ -38,35 +38,29 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
   }
 }
 
-async function request<T>(
+interface RequestOptions {
+  signal?: AbortSignal;
+}
+
+async function sendRequest<T>(
   method: string,
   path: string,
-  body?: unknown,
+  body?: BodyInit | null,
+  headers: Record<string, string> = {},
+  options: RequestOptions = {},
 ): Promise<T> {
-  const url = `${BASE_URL}${path}`;
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const options: RequestInit = {
+  const response = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
     credentials: 'include',
-  };
-
-  if (body !== undefined) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(url, options);
+    body: body ?? null,
+    signal: options.signal,
+  });
 
   if (!response.ok) {
-    const error = await parseErrorResponse(response);
-    throw new ApiRequestError(response.status, error);
+    throw new ApiRequestError(response.status, await parseErrorResponse(response));
   }
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return undefined as T;
   }
@@ -74,24 +68,49 @@ async function request<T>(
   return response.json() as Promise<T>;
 }
 
+function json<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  options: RequestOptions = {},
+): Promise<T> {
+  const hasBody = body !== undefined;
+  return sendRequest<T>(
+    method,
+    path,
+    hasBody ? JSON.stringify(body) : undefined,
+    hasBody ? { 'Content-Type': 'application/json' } : {},
+    options,
+  );
+}
+
 export const apiClient = {
-  get<T>(path: string): Promise<T> {
-    return request<T>('GET', path);
+  get<T>(path: string, options?: RequestOptions): Promise<T> {
+    return json<T>('GET', path, undefined, options);
   },
 
-  post<T>(path: string, body?: unknown): Promise<T> {
-    return request<T>('POST', path, body);
+  post<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    return json<T>('POST', path, body, options);
   },
 
-  patch<T>(path: string, body?: unknown): Promise<T> {
-    return request<T>('PATCH', path, body);
+  patch<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    return json<T>('PATCH', path, body, options);
   },
 
-  put<T>(path: string, body?: unknown): Promise<T> {
-    return request<T>('PUT', path, body);
+  put<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+    return json<T>('PUT', path, body, options);
   },
 
-  delete<T>(path: string): Promise<T> {
-    return request<T>('DELETE', path);
+  delete<T>(path: string, options?: RequestOptions): Promise<T> {
+    return json<T>('DELETE', path, undefined, options);
+  },
+
+  upload<T>(
+    path: string,
+    formData: FormData,
+    method: 'POST' | 'PATCH' | 'PUT' = 'POST',
+    options?: RequestOptions,
+  ): Promise<T> {
+    return sendRequest<T>(method, path, formData, {}, options);
   },
 };

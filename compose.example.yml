@@ -1,0 +1,56 @@
+# Production-ready Pileo deployment with secure defaults.
+#
+# Quick start:
+#   1. Copy this file to compose.yml
+#   2. Copy .env.example to .env, fill in PILEO_SESSION_SECRET (generate with
+#      `openssl rand -hex 32`)
+#   3. docker compose up -d
+#
+# All persistent state lives in the bind-mounted ./data (SQLite + WAL) and
+# ./uploads (avatars + attachments) directories — keep them backed up.
+
+services:
+  pileo:
+    image: mauriceboe/pileo:latest
+    container_name: pileo
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+    ports:
+      - "3003:3003"
+    environment:
+      - PILEO_NODE_ENV=production
+      - PILEO_HOST=0.0.0.0
+      - PILEO_PORT=3003
+      - PILEO_SESSION_SECRET=${PILEO_SESSION_SECRET:?Generate with: openssl rand -hex 32}
+      - PILEO_DB_PATH=/app/data/pileo.db
+      - PILEO_UPLOAD_DIR=/app/data/uploads
+      - TZ=${TZ:-UTC}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PILEO_ALLOWED_ORIGINS=${PILEO_ALLOWED_ORIGINS:-}
+      - PILEO_APP_URL=${PILEO_APP_URL:-}
+      # Behind a TLS-terminating reverse proxy:
+      # - PILEO_TRUST_PROXY=1
+      # - PILEO_FORCE_HTTPS=true
+      # OAuth / OIDC (optional):
+      # - PILEO_OIDC_ISSUER=https://auth.example.com
+      # - PILEO_OIDC_CLIENT_ID=pileo
+      # - PILEO_OIDC_CLIENT_SECRET=supersecret
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

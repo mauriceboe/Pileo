@@ -1,7 +1,7 @@
 import { Sun, Moon, LogOut } from 'lucide-react';
 import { useUiStore } from '../../stores/ui.store';
-import { useAuthStore } from '../../stores/auth.store';
-import { useNavigate } from 'react-router-dom';
+import { useLogout } from '../../hooks/useLogout';
+import { useAppVersion } from '../../hooks/useAppVersion';
 import { Dialog } from './Dialog';
 import { ConnectedApplications } from '../settings/ConnectedApplications';
 import styles from './settings-dialog.module.css';
@@ -14,13 +14,8 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const theme = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
-  const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
+  const handleLogout = useLogout();
+  const version = useAppVersion();
 
   return (
     <Dialog open={open} onClose={onClose} title="Settings">
@@ -68,7 +63,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         <div className={styles.divider} />
 
         <div className={styles.version}>
-          Pileo v0.0.5
+          Pileo v{version}
         </div>
       </div>
     </Dialog>

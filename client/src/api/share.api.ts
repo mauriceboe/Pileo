@@ -37,10 +37,8 @@ export async function deleteShareLink(boardId: string): Promise<void> {
 }
 
 export async function getSharedBoard(token: string): Promise<SharedBoardData> {
-  const response = await fetch(`/api/v1/shared/${token}`);
-  if (!response.ok) {
-    throw new Error('Invalid or expired link');
-  }
-  const body = await response.json();
-  return body.data;
+  const response = await apiClient.get<ApiSuccessResponse<SharedBoardData>>(
+    `/shared/${token}`,
+  );
+  return response.data;
 }

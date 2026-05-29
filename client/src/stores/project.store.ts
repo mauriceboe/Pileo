@@ -1,11 +1,9 @@
 import { create } from 'zustand';
-import type { Project, Board, CreateProjectInput, UpdateProjectInput, ProjectMember, UserPublic } from '@pileo/shared';
+import type { Project, Board, CreateProjectInput, UpdateProjectInput, ProjectMemberWithUser } from '@pileo/shared';
 import * as projectsApi from '../api/projects.api';
 import * as boardsApi from '../api/boards.api';
 
-export interface ProjectMemberWithUser extends ProjectMember {
-  user?: UserPublic;
-}
+export type { ProjectMemberWithUser };
 
 interface ProjectState {
   projects: Project[];
@@ -79,8 +77,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   fetchMembers: async (projectId: string): Promise<void> => {
     try {
       const members = await projectsApi.listMembers(projectId);
-      // The API may return members with embedded user info; cast accordingly
-      set({ members: members as ProjectMemberWithUser[] });
+      set({ members });
     } catch {
       // Non-critical failure
     }

@@ -1,19 +1,12 @@
 import type {
   ApiSuccessResponse,
-  Comment,
+  CommentWithAuthor,
   CreateCommentInput,
   UpdateCommentInput,
 } from '@pileo/shared';
 import { apiClient } from './client';
 
-export interface CommentWithAuthor extends Comment {
-  author: {
-    id: string;
-    username: string;
-    displayName: string;
-    avatarPath: string | null;
-  };
-}
+export type { CommentWithAuthor };
 
 export async function listComments(taskId: string): Promise<CommentWithAuthor[]> {
   const response = await apiClient.get<ApiSuccessResponse<CommentWithAuthor[]>>(
