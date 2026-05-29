@@ -6,7 +6,11 @@ on:
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
-      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/**'
+      - 'compose.example.yml'
+      - '.env.example'
+      - '.gitignore'
+      - 'LICENSE'
 
 concurrency:
   group: release-${{ github.ref }}
