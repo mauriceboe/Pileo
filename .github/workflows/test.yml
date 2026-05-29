@@ -9,6 +9,12 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+# env.ts requires PILEO_SESSION_SECRET at module load time, even in tests.
+# Passing a dummy value here is fine — no test actually exercises the
+# cookie-signing path against a real client.
+env:
+  PILEO_SESSION_SECRET: test-only-secret-not-used-for-anything-real-aaaaaaaaaa
+
 jobs:
   server:
     name: Server (NestJS)
