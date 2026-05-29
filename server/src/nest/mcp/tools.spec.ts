@@ -117,6 +117,7 @@ describe('MCP tools', () => {
       'set_task_assignees',
       'set_task_custom_value',
       'set_task_labels',
+      'set_task_status',
       'toggle_checklist_item',
       'update_checklist_item',
       'update_custom_field',
@@ -182,6 +183,32 @@ describe('MCP tools', () => {
     vi.mocked(taskService.update).mockResolvedValue({ id: 't1' } as never);
     await tools.get('update_task')!.handler({ taskId: 't1' });
     expect(taskService.update).toHaveBeenCalledWith('t1', USER_ID, {});
+  });
+
+  it('set_task_status stamps completedAt/rejectedAt now when flags are true', async () => {
+    vi.mocked(taskService.update).mockResolvedValue({ id: 't1' } as never);
+    await tools.get('set_task_status')!.handler({ taskId: 't1', completed: true, rejected: true });
+    expect(taskService.update).toHaveBeenCalledWith('t1', USER_ID, {
+      completedAt: expect.any(Date),
+      rejectedAt: expect.any(Date),
+    });
+  });
+
+  it('set_task_status clears the timestamps when flags are false', async () => {
+    vi.mocked(taskService.update).mockResolvedValue({ id: 't1' } as never);
+    await tools.get('set_task_status')!.handler({ taskId: 't1', completed: false, rejected: false });
+    expect(taskService.update).toHaveBeenCalledWith('t1', USER_ID, {
+      completedAt: null,
+      rejectedAt: null,
+    });
+  });
+
+  it('set_task_status only touches the flag that was passed', async () => {
+    vi.mocked(taskService.update).mockResolvedValue({ id: 't1' } as never);
+    await tools.get('set_task_status')!.handler({ taskId: 't1', completed: true });
+    expect(taskService.update).toHaveBeenCalledWith('t1', USER_ID, {
+      completedAt: expect.any(Date),
+    });
   });
 
   it('add_comment passes (taskId, userId, content) in the legacy order', async () => {

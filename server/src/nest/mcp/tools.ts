@@ -188,6 +188,24 @@ export function registerTools(server: McpServer, userId: string): void {
       ok(await taskService.updateLabels(taskId, userId, { add, remove })),
   );
 
+  server.tool(
+    'set_task_status',
+    'Mark a task (card) as completed and/or rejected, or clear that state. '
+      + 'Pass completed/rejected as booleans: true stamps the current time, false '
+      + 'clears it. Only the flags you pass are changed; omit one to leave it as-is.',
+    {
+      taskId: z.string(),
+      completed: z.boolean().optional().describe('true = mark done now, false = un-complete'),
+      rejected: z.boolean().optional().describe('true = mark rejected now, false = un-reject'),
+    },
+    async ({ taskId, completed, rejected }) => {
+      const patch: { completedAt?: Date | null; rejectedAt?: Date | null } = {};
+      if (completed !== undefined) patch.completedAt = completed ? new Date() : null;
+      if (rejected !== undefined) patch.rejectedAt = rejected ? new Date() : null;
+      return ok(await taskService.update(taskId, userId, patch as never));
+    },
+  );
+
   // ---------------------------------------------------------------------
   // Labels (called "categories" in some UIs)
   // ---------------------------------------------------------------------
