@@ -19,7 +19,11 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm ci --include=optional
+      # `npm ci` fails when the lockfile is generated on a different OS
+      # (Windows dev → Linux CI) because platform-specific optional deps like
+      # @rollup/rollup-linux-x64-gnu aren't in the lockfile. `npm install`
+      # resolves them at install time.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - run: npm run build --workspace=@pileo/shared
       - run: npm test --workspace=@pileo/server
       - run: npm run typecheck --workspace=@pileo/server
@@ -33,7 +37,11 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm ci --include=optional
+      # `npm ci` fails when the lockfile is generated on a different OS
+      # (Windows dev → Linux CI) because platform-specific optional deps like
+      # @rollup/rollup-linux-x64-gnu aren't in the lockfile. `npm install`
+      # resolves them at install time.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - run: npm run build --workspace=@pileo/shared
       - run: npm test --workspace=@pileo/client
       - run: npm run build --workspace=@pileo/client
@@ -49,7 +57,11 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm ci --include=optional
+      # `npm ci` fails when the lockfile is generated on a different OS
+      # (Windows dev → Linux CI) because platform-specific optional deps like
+      # @rollup/rollup-linux-x64-gnu aren't in the lockfile. `npm install`
+      # resolves them at install time.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - run: npm run build --workspace=@pileo/shared
       - run: npm run test:coverage --workspace=@pileo/client
       - uses: actions/upload-artifact@v4
